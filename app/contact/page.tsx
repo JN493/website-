@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 export default function Contact() {
@@ -14,11 +14,26 @@ export default function Contact() {
     if (window.location.hash === "#quote") setShowQuoteForm(true);
   }, []);
 
+  // Spam check: real people take longer than a few seconds to fill the form in
+  const formShownAt = useRef(0);
+  useEffect(() => {
+    if (showQuoteForm) formShownAt.current = Date.now();
+  }, [showQuoteForm]);
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
     const data = new FormData(form);
     const text = (key: string) => String(data.get(key) ?? "").trim();
+
+    // Likely a bot: honeypot filled or submitted too fast. Fake success, send nothing.
+    if (text("website") || Date.now() - formShownAt.current < 3000) {
+      form.reset();
+      setConsent(false);
+      setStatus("sent");
+      return;
+    }
+
     setStatus("sending");
 
     // ponytail: files upload before the row is saved, so a failed save leaves orphan files in the bucket
@@ -91,6 +106,15 @@ export default function Contact() {
           >
             ← Back
           </button>
+
+          <input
+            type="text"
+            name="website"
+            aria-hidden="true"
+            tabIndex={-1}
+            autoComplete="off"
+            className="absolute -left-[9999px]"
+          />
 
           <label className="flex flex-col gap-1">
             <span className="text-sm font-medium">Name</span>
