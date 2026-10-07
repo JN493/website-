@@ -27,7 +27,7 @@ export default function Contact() {
     const text = (key: string) => String(data.get(key) ?? "").trim();
 
     // Likely a bot: honeypot filled or submitted too fast. Fake success, send nothing.
-    if (text("website") || Date.now() - formShownAt.current < 3000) {
+    if (text("website") || Date.now() - formShownAt.current < 2000) {
       form.reset();
       setConsent(false);
       setStatus("sent");
