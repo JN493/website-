@@ -30,12 +30,13 @@
 
 **Contact**
 - Title: `Contact SLS Fabrications | Hailsham Steel Fabricators`
-- Meta: Get in touch with SLS Fabrications, Unit 2 Diplocks Way, Hailsham, for a quote, site survey or general enquiry. National and international delivery available.
+- Meta: Get in touch with SLS Fabrications, Unit 2 Hythe Works, Diplocks Way, Hailsham, for a quote, site survey or general enquiry. National and international delivery available.
 
 **Confirmed business address:**
 SLS Fabrications
-Unit 2 Diplocks Way
-Hailsham, East Sussex
+Unit 2 Hythe Works, Diplocks Way
+Hailsham BN27 3JF
+United Kingdom
 
 *Use this for the footer, Contact page, and Google Business Profile listing.*
 

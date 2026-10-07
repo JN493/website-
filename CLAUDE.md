@@ -2,7 +2,7 @@
 
 ## About the business
 SLS Fabrications is a welding and steel fabrication workshop based in Hailsham, East Sussex, UK.
-- Address: Unit 2 Diplocks Way, Hailsham, East Sussex
+- Address: Unit 2 Hythe Works, Diplocks Way, Hailsham BN27 3JF, United Kingdom
 - Phone: 01323 846061
 - Hours: Mon–Fri, 7:30am–5:00pm
 - Small team (5–15 people)
