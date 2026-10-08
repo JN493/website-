@@ -1,6 +1,8 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { Honeypot, looksLikeBot, useShownAt } from "@/components/SpamGuard";
 
 export default function Contact() {
   const [showQuoteForm, setShowQuoteForm] = useState(false);
@@ -14,11 +16,7 @@ export default function Contact() {
     if (window.location.hash === "#quote") setShowQuoteForm(true);
   }, []);
 
-  // Spam check: real people take longer than a few seconds to fill the form in
-  const formShownAt = useRef(0);
-  useEffect(() => {
-    if (showQuoteForm) formShownAt.current = Date.now();
-  }, [showQuoteForm]);
+  const formShownAt = useShownAt(showQuoteForm);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -26,8 +24,7 @@ export default function Contact() {
     const data = new FormData(form);
     const text = (key: string) => String(data.get(key) ?? "").trim();
 
-    // Likely a bot: honeypot filled or submitted too fast. Fake success, send nothing.
-    if (text("website") || Date.now() - formShownAt.current < 2000) {
+    if (looksLikeBot(data, formShownAt.current)) {
       form.reset();
       setConsent(false);
       setStatus("sent");
@@ -73,28 +70,62 @@ export default function Contact() {
   }
 
   return (
-    <main className="p-6 max-w-2xl mx-auto">
+    <main className={`p-6 mx-auto w-full ${showQuoteForm ? "max-w-2xl" : "max-w-6xl"}`}>
       <h1 className="text-3xl font-bold mb-6">{showQuoteForm ? "Request a Quote" : "Contact"}</h1>
 
       {!showQuoteForm && (
-        <div className="flex gap-4 mb-8">
-          <button
-            onClick={() => setShowQuoteForm(true)}
-            className="bg-black text-white px-6 py-3 font-semibold"
-          >
-            Request a Quote
-          </button>
-          <a
-            href="mailto:info@slsfabrications.com"
-            className="border px-6 py-3 font-semibold inline-block"
-          >
-            Talk to the Team
-          </a>
-        </div>
+        <>
+          <p className="text-gray-600 mb-8">
+            Have a project ready to quote, need help finding the right solution, or want to join us? Choose the option that fits.
+          </p>
+          <div className="grid gap-6 md:grid-cols-3">
+            <section className="border p-6 flex flex-col">
+              <h2 className="text-xl font-semibold mb-2">Request a Quote</h2>
+              <p className="text-gray-600 text-sm">
+                Ready to partner on your next project? Have drawings or a specification in mind? Send us the details so our team can discuss your requirements and prepare a quote.
+              </p>
+              <div className="mt-auto pt-6">
+                <button
+                  onClick={() => setShowQuoteForm(true)}
+                  className="bg-black text-white px-6 py-3 font-semibold"
+                >
+                  Request a Quote
+                </button>
+              </div>
+            </section>
+
+            <section className="border p-6 flex flex-col">
+              <h2 className="text-xl font-semibold mb-2">Talk to the Team</h2>
+              <p className="text-gray-600 text-sm">Not sure what you want, but looking for a solution? Talk to our team.</p>
+              <div className="mt-auto pt-6">
+                <a
+                  href="mailto:info@slsfabrications.com"
+                  className="border px-6 py-3 font-semibold inline-block"
+                >
+                  Talk to our team
+                </a>
+                <p className="text-gray-600 text-sm mt-4">
+                  Prefer to talk on the phone? Call us on <a href="tel:01323846061" className="underline">01323 846061</a>
+                </p>
+              </div>
+            </section>
+
+            <section className="border p-6 flex flex-col">
+              <h2 className="text-xl font-semibold mb-2">Join Our Team</h2>
+              <div className="mt-auto pt-6">
+                <Link href="/careers" className="border px-6 py-3 font-semibold inline-block">
+                  Join Our Team
+                </Link>
+              </div>
+            </section>
+          </div>
+        </>
       )}
 
       {showQuoteForm && status === "sent" && (
-        <p role="status">Thanks, we&apos;ve received your request and will be in touch soon.</p>
+        <p role="status">
+          Thanks, we&apos;ve received your request and will be in touch soon to discuss the details further and arrange a meeting if needed.
+        </p>
       )}
 
       {showQuoteForm && status !== "sent" && (
@@ -107,14 +138,7 @@ export default function Contact() {
             ← Back
           </button>
 
-          <input
-            type="text"
-            name="website"
-            aria-hidden="true"
-            tabIndex={-1}
-            autoComplete="off"
-            className="absolute -left-[9999px]"
-          />
+          <Honeypot />
 
           <label className="flex flex-col gap-1">
             <span className="text-sm font-medium">Name</span>

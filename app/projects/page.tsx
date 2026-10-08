@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import BrochureForm from "@/components/BrochureForm";
 
 export const metadata: Metadata = {
   title: "Our Work & Case Studies | SLS Fabrications",
@@ -9,14 +9,15 @@ export const metadata: Metadata = {
 
 export default function Projects() {
   return (
-    <main className="p-6 max-w-2xl mx-auto">
+    <main className="p-6 max-w-2xl mx-auto w-full">
       <h1 className="text-3xl font-bold mb-6">Projects</h1>
-      <p className="text-gray-600 text-sm mb-6">Case studies go here once photos and project details are available.</p>
-      <div className="flex gap-4">
-        <button className="border px-6 py-3 font-semibold">Download Brochure</button>
-        <Link href="/contact#quote" className="bg-black text-white px-6 py-3 font-semibold">Request a Quote</Link>
-      </div>
-      <p className="text-gray-500 text-xs mt-2">Brochure download to be wired up to collect email for mailing list.</p>
+      <section className="border p-6">
+        <h2 className="text-xl font-semibold mb-2">Discover what SLS Fabrications can do for your business</h2>
+        <p className="text-gray-600 text-sm mb-6">
+          Get an overview of our services and projects in one place. Enter your email to receive a copy in your inbox.
+        </p>
+        <BrochureForm />
+      </section>
     </main>
   );
 }

@@ -36,15 +36,17 @@ Build the company website now, and later an internal workshop efficiency app (Su
 - Row Level Security: anon can insert only (and only with consent recorded). No public read.
 - Env vars `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are set in Cloudflare build variables and in local `.env.local` (baked in at build time). Never use or commit the service_role key.
 - Shared client in `src/lib/supabase.ts`.
-- Spam protection on the quote form: hidden honeypot field named `website`, and a minimum fill time of 2 seconds. Bots see the normal thank-you message but nothing is uploaded or saved. Stronger protection (Cloudflare Turnstile checked by a Supabase function) is planned before go-live.
+- Tables `brochure_requests` (id, email, consent_given_at, created_at, sent_at nullable) and `job_applications` (id, name, email, file_path, consent_given_at, created_at), plus private bucket `cv-files` (5 MB, PDF/Word only). Defined in `supabase/brochure-and-careers.sql`, same insert-only RLS pattern as `quote_requests`. Written 2026-10-08; the developer runs it in the Supabase SQL Editor. Until it has been run, the brochure and careers forms show their error message.
+- Spam protection on all three forms (quote, brochure, careers): hidden honeypot field named `website`, and a minimum fill time of 2 seconds. Shared helpers in `src/components/SpamGuard.tsx` (`Honeypot`, `useShownAt`, `looksLikeBot`). Bots see the normal thank-you message but nothing is uploaded or saved. Stronger protection (Cloudflare Turnstile checked by a Supabase function) is planned before go-live.
 
 ## Site structure (agreed)
 Five pages: **About, Capabilities, Industries, Projects, Contact** (no "Our" prefix). Footer has Find Us (map), Call Us, Opening Hours and links to Privacy, Terms, Cookies.
 - **About**: placeholder. Needs team, workshop photo, mission statement (from Rob).
 - **Capabilities**: tile grid, built. See below.
 - **Industries**: tile grid with titles only, built. Same TileGrid component as Capabilities. Not clickable yet. 12 sectors, no client names. Sector wording to be confirmed with Rob.
-- **Projects**: not built. Plan: case studies (pending photos), brochure download (see below), Request a Quote entry point linking to `/contact#quote`, careers link.
-- **Contact**: "Request a Quote" (opens the quote form) and "Talk to the Team" (`mailto:info@slsfabrications.com`, mailbox not created yet). Heading changes to "Request a Quote" while the form is open.
+- **Projects**: brochure form only (`src/components/BrochureForm.tsx`), no case studies, careers link or Request a Quote link yet. Case studies pending photos.
+- **Contact**: intro line, then three cards (one column on phones, three side by side from `md`): "Request a Quote" (opens the quote form; heading changes to "Request a Quote" while open), "Talk to the Team" (`mailto:info@slsfabrications.com`, mailbox not created yet, plus a tel: link to 01323 846061), and "Join Our Team" (links to /careers; title and button only, no copy approved yet).
+- **Careers** (`/careers`, not in the main nav, in the sitemap): "Join Our Team" with a CV form (`src/components/CareersForm.tsx`): name, email, CV (.pdf/.doc/.docx, max 5 MB, checked in the browser and by the bucket) and required consent. Uploads to `cv-files`, then inserts into `job_applications`.
 - Mobile nav: hamburger menu below the `md` breakpoint (built and tested on iPhone 7 Plus).
 - No "Request a quote" buttons on the Capabilities or Industries pages (decision by the developer).
 
@@ -56,8 +58,9 @@ Five pages: **About, Capabilities, Industries, Projects, Contact** (no "Our" pre
 - Order: On-Site Surveying, CAD Design, Laser Cutting, Punching, Folding, Rolling, Tube Bending, CNC Machining, Welding, Finishing, Powder Coating, Delivery.
 - Copy is signed off by the developer. Use it word for word from `src/lib/capabilities.ts`. Laser Cutting, CNC Machining and Powder Coating copy was drafted from the old Partner Services paragraph with no specifics and approved on 2026-10-08. Do not mention "partner" in the tile copy (the developer will cover it on a detail page later). Finishing's block title was shortened to "Finishing" and its description names polishing, galvanisation and chemical oxidation.
 
-## Planned: brochure download (Projects page)
-- Form collects only an email address, with a REQUIRED consent checkbox. The brochure PDF is emailed to the visitor. The PDF does not exist yet, so build it so the file can be dropped in later.
+## Brochure download (Projects page)
+- Built 2026-10-08: the form collects only an email address with a REQUIRED consent checkbox, and inserts a row into `brochure_requests`. The thank-you says "Thanks, we'll send you the brochure shortly." Nothing is emailed yet and no PDF exists.
+- Still to build: emailing the brochure PDF (sets `sent_at`). The PDF does not exist yet, so build it so the file can be dropped in later.
 - Needs an email-sending service and a Supabase Edge Function (sending cannot happen from a static site). Sending domain needs SPF and DKIM records in Cloudflare DNS. A domain can have only ONE SPF record, so it must be merged with Microsoft 365's (`include:spf.protection.outlook.com`).
 - Consent wording must be decided (see open items). Marketing/mailing list consent should be a separate unticked box and the brochure must not depend on it.
 - Cannot go live on the real domain until ICO registration is done and the Privacy Policy covers it.
@@ -96,4 +99,5 @@ Five pages: **About, Capabilities, Industries, Projects, Contact** (no "Our" pre
 - Rob: Microsoft admin login, ICO registration, mission statement, workshop photos, sector name wording, permission to name any clients, brochure PDF.
 - Rachael: analytics decision (Google Analytics with banner, or Plausible). Asked 2026-10-08. Key deciding question put to her: is paid advertising (Google Ads) planned? Also proposed an optional "How did you hear about us?" field on the quote form (not yet agreed), plus Google Search Console and Google Business Profile.
 - Rob: asked 2026-10-08 about recovering the company Facebook page.
-- Build: brochure form, Projects page, About page, homepage, Turnstile spam protection, legal page fill-in and review, attach domain to Worker, retire the old Netlify site.
+- Supabase: run `supabase/brochure-and-careers.sql`, then test the brochure and careers forms end to end.
+- Build: brochure emailing, Projects case studies, About page, homepage, Turnstile spam protection, legal page fill-in and review, attach domain to Worker, retire the old Netlify site.
