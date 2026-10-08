@@ -80,7 +80,9 @@ Five pages: **About, Capabilities, Industries, Projects, Contact** (no "Our" pre
 
 ## Working agreements
 - The developer pastes between Claude (chat, plans and prompts) and Claude Code (implementation). Claude Code does the code, tests in a real browser, and reports back.
-- Do not push unless asked. Commit locally with clear messages. Run lint and `npm run build` before reporting. Do not add dependencies without asking.
+- Commit with clear messages. Run lint and `npm run build` before reporting. Do not add dependencies without asking.
+- Pushing to `main` is allowed without asking while slsfabrications.com is NOT attached to the Worker (agreed 2026-10-08). Once the domain is attached, go back to asking before every push.
+- Keep this file and `sls-content-draft.md` up to date as work happens, but only with changes that are certain (done, tested, or explicitly decided). Do not record guesses or unconfirmed plans as fact.
 - Test on a real phone when possible (an iPhone 7 Plus caught a bug that simulated testing missed).
 - Past issue (resolved): duplicate `app` folders (`src/app/` and root `app/`) broke routing. All pages live in the root `app/`. Shared components are in `src/components/`.
 
