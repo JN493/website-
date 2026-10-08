@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+import { submitForm } from "@/lib/submitForm";
 import { Honeypot, looksLikeBot, useShownAt } from "@/components/SpamGuard";
+import Turnstile, { TURNSTILE_WAIT_MESSAGE } from "@/components/Turnstile";
 
 // Invisible copy of the phone line under the Request a Quote and Join Our Team buttons,
 // so all three buttons line up at desktop width. Hidden entirely on phones, where cards stack.
@@ -15,7 +16,9 @@ const phoneSpacer = (
 export default function Contact() {
   const [showQuoteForm, setShowQuoteForm] = useState(false);
   const [consent, setConsent] = useState(false);
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error" | "needs-check">("idle");
+  const [token, setToken] = useState<string | null>(null);
+  const [resetKey, setResetKey] = useState(0);
 
   // Projects page links here as /contact#quote to open the form directly.
   // The hash only exists in the browser, so it has to be read after the first render.
@@ -39,36 +42,32 @@ export default function Contact() {
       return;
     }
 
+    if (!token) {
+      setStatus("needs-check");
+      return;
+    }
     setStatus("sending");
 
-    // ponytail: files upload before the row is saved, so a failed save leaves orphan files in the bucket
-    const folder = crypto.randomUUID();
-    const filePaths: string[] = [];
-    for (const file of data.getAll("files") as File[]) {
-      if (!file.size) continue;
-      const path = `${folder}/${file.name.replace(/[^\w.-]/g, "_")}`;
-      const { error } = await supabase.storage.from("quote-files").upload(path, file);
-      if (error) {
-        console.error(error);
-        setStatus("error");
-        return;
-      }
-      filePaths.push(path);
-    }
-
-    const { error } = await supabase.from("quote_requests").insert({
-      name: text("name"),
-      company: text("company"),
-      phone: text("phone"),
-      email: text("email"),
-      project_details: text("project_details"),
-      submission_description: text("submission_description"),
-      file_paths: filePaths,
-      consent_given_at: new Date().toISOString(),
-    });
-    if (error) {
-      console.error(error);
+    try {
+      await submitForm(
+        "quote",
+        {
+          name: text("name"),
+          company: text("company"),
+          phone: text("phone"),
+          email: text("email"),
+          project_details: text("project_details"),
+          submission_description: text("submission_description"),
+          consent,
+        },
+        (data.getAll("files") as File[]).filter((file) => file.size > 0),
+        token,
+        text("website"),
+      );
+    } catch (err) {
+      console.error(err);
       setStatus("error");
+      setResetKey((k) => k + 1);
       return;
     }
 
@@ -202,6 +201,8 @@ export default function Contact() {
             <span>I agree to be contacted about this enquiry and understand my details will be handled in line with the Privacy Policy.</span>
           </label>
 
+          <Turnstile onToken={setToken} resetKey={resetKey} />
+
           <button
             type="submit"
             disabled={status === "sending"}
@@ -209,6 +210,7 @@ export default function Contact() {
           >
             {status === "sending" ? "Sending..." : "Submit"}
           </button>
+          {status === "needs-check" && !token && <p role="alert" className="text-sm text-red-700">{TURNSTILE_WAIT_MESSAGE}</p>}
           {status === "error" && (
             <p role="alert" className="text-sm text-red-700">
               Something went wrong sending your request. Please try again or call us on 01323 846061.

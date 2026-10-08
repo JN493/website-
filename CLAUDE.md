@@ -34,10 +34,19 @@ Build the company website now, and later an internal workshop efficiency app (Su
 - Table `quote_requests` (name, company, phone, email, project details, `submission_description`, `file_paths text[]`, `consent_given_at`). Optional Company is sent as an empty string (column is NOT NULL).
 - Private storage bucket `quote-files`; uploads go to a random folder per submission.
 - Row Level Security: anon can insert only (and only with consent recorded). No public read.
-- Env vars `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are set in Cloudflare build variables and in local `.env.local` (baked in at build time). Never use or commit the service_role key.
+- Env vars `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `NEXT_PUBLIC_TURNSTILE_SITE_KEY` live in local `.env.local` (git-ignored) and must also be in the Cloudflare build variables (baked in at build time). Never use or commit the service_role key or the Turnstile secret.
 - Shared client in `src/lib/supabase.ts`.
 - Tables `brochure_requests` (id, email, consent_given_at, created_at, sent_at nullable) and `job_applications` (id, name, email, file_path, consent_given_at, created_at), plus private bucket `cv-files` (5 MB, PDF/Word only). Defined in `supabase/brochure-and-careers.sql`, same insert-only RLS pattern as `quote_requests`. Written 2026-10-08; the developer runs it in the Supabase SQL Editor. Until it has been run, the brochure and careers forms show their error message.
-- Spam protection on all three forms (quote, brochure, careers): hidden honeypot field named `website`, and a minimum fill time of 2 seconds. Shared helpers in `src/components/SpamGuard.tsx` (`Honeypot`, `useShownAt`, `looksLikeBot`). Bots see the normal thank-you message but nothing is uploaded or saved. Stronger protection (Cloudflare Turnstile checked by a Supabase function) is planned before go-live.
+- Spam protection on all three forms (quote, brochure, careers): hidden honeypot field named `website`, and a minimum fill time of 2 seconds. Shared helpers in `src/components/SpamGuard.tsx` (`Honeypot`, `useShownAt`, `looksLikeBot`). Bots see the normal thank-you message but nothing is uploaded or saved.
+
+### Form submissions: Turnstile + Edge Function (code written 2026-10-08)
+- All three forms submit through `src/lib/submitForm.ts`, which calls the Supabase Edge Function `submit-form` (`supabase/functions/submit-form/index.ts`, pasted into the dashboard editor). The forms no longer insert into tables or upload to storage with the anon client.
+- Cloudflare Turnstile widget: `src/components/Turnstile.tsx` (explicit render, script from challenges.cloudflare.com, widget mode set to Managed in the Cloudflare dashboard). Site key 0x4AAAAAAFRSxpEQGtGG0m1N (public). Submit is blocked with a message until a token exists; the widget resets after every submission (tokens are single use).
+- The function checks origin (slsfabrications.com, www, website.robstonesls77.workers.dev, localhost:3000), honeypot, verifies the token with Cloudflare siteverify using the Supabase secret `TURNSTILE_SECRET_KEY`, validates fields, consent and files server-side (quote: optional, up to 10 files, 20 MB each; careers: exactly one .pdf/.doc/.docx up to 5 MB), creates signed upload URLs, inserts the row with the service role and sets `consent_given_at` itself. The browser then uploads files to the signed URLs.
+- Known limitation: the row is saved before the files upload, so a failed upload can leave a row without its file.
+- `tsconfig.json` excludes `supabase/` so the website build does not type-check the Deno function.
+- Local testing: the real site key fails on localhost (Turnstile error 110200, hostname not allowed) unless localhost is added to the widget's hostnames. Cloudflare's always-pass test key `1x00000000000000000000AA` works anywhere for local builds.
+- `supabase/lock-down-direct-inserts.sql` removes the anon INSERT policies and grants so the function is the only way in. Run it ONLY after the function is deployed and all three forms are tested through it.
 
 ## Site structure (agreed)
 Five pages: **About, Capabilities, Industries, Projects, Contact** (no "Our" prefix). Footer has Find Us (map), Call Us, Opening Hours and links to Privacy, Terms, Cookies.
@@ -99,5 +108,6 @@ Five pages: **About, Capabilities, Industries, Projects, Contact** (no "Our" pre
 - Rob: Microsoft admin login, ICO registration, mission statement, workshop photos, sector name wording, permission to name any clients, brochure PDF.
 - Rachael: analytics decision (Google Analytics with banner, or Plausible). Asked 2026-10-08. Key deciding question put to her: is paid advertising (Google Ads) planned? Also proposed an optional "How did you hear about us?" field on the quote form (not yet agreed), plus Google Search Console and Google Business Profile.
 - Rob: asked 2026-10-08 about recovering the company Facebook page.
-- Supabase: run `supabase/brochure-and-careers.sql`, then test the brochure and careers forms end to end.
-- Build: brochure emailing, Projects case studies, About page, homepage, Turnstile spam protection, legal page fill-in and review, attach domain to Worker, retire the old Netlify site.
+- Supabase / Turnstile (in this order): create the `submit-form` function in the dashboard and paste the code, set the `TURNSTILE_SECRET_KEY` secret, add `NEXT_PUBLIC_TURNSTILE_SITE_KEY` to the Cloudflare build variables, push, test all three forms on the preview, then run `supabase/lock-down-direct-inserts.sql` and test again.
+- Privacy Policy and Cookie Policy must mention Cloudflare Turnstile (bot check on the forms).
+- Build: brochure emailing, Projects case studies, About page, homepage, legal page fill-in and review, attach domain to Worker, retire the old Netlify site.

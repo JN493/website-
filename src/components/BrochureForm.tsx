@@ -1,11 +1,14 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+import { submitForm } from "@/lib/submitForm";
 import { Honeypot, looksLikeBot, useShownAt } from "@/components/SpamGuard";
+import Turnstile, { TURNSTILE_WAIT_MESSAGE } from "@/components/Turnstile";
 
 export default function BrochureForm() {
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error" | "needs-check">("idle");
+  const [token, setToken] = useState<string | null>(null);
+  const [resetKey, setResetKey] = useState(0);
   const shownAt = useShownAt();
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -19,15 +22,19 @@ export default function BrochureForm() {
       return;
     }
 
+    if (!token) {
+      setStatus("needs-check");
+      return;
+    }
+
     setStatus("sending");
     // Only saves the request. Emailing the brochure comes later via an email function.
-    const { error } = await supabase.from("brochure_requests").insert({
-      email: String(data.get("email") ?? "").trim(),
-      consent_given_at: new Date().toISOString(),
-    });
-    if (error) {
-      console.error(error);
+    try {
+      await submitForm("brochure", { email: String(data.get("email") ?? ""), consent: true }, [], token, String(data.get("website") ?? ""));
+    } catch (err) {
+      console.error(err);
       setStatus("error");
+      setResetKey((k) => k + 1);
       return;
     }
     form.reset();
@@ -55,6 +62,8 @@ export default function BrochureForm() {
         </span>
       </label>
 
+      <Turnstile onToken={setToken} resetKey={resetKey} />
+
       <button
         type="submit"
         disabled={status === "sending"}
@@ -62,6 +71,7 @@ export default function BrochureForm() {
       >
         {status === "sending" ? "Sending..." : "Download brochure"}
       </button>
+      {status === "needs-check" && !token && <p role="alert" className="text-sm text-red-700">{TURNSTILE_WAIT_MESSAGE}</p>}
       {status === "error" && (
         <p role="alert" className="text-sm text-red-700">
           Something went wrong sending your request. Please try again or call us on 01323 846061.

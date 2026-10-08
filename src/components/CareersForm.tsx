@@ -1,21 +1,20 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+import { submitForm } from "@/lib/submitForm";
 import { Honeypot, looksLikeBot, useShownAt } from "@/components/SpamGuard";
+import Turnstile, { TURNSTILE_WAIT_MESSAGE } from "@/components/Turnstile";
 
-// Allowed CV types by extension. The content type is set from this list rather than
-// trusting the browser, which often reports Word files as blank or generic.
-const cvTypes: Record<string, string> = {
-  pdf: "application/pdf",
-  doc: "application/msword",
-  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-};
+// Same rules as the submit-form Edge Function, checked here first for friendly messages.
+// The function picks the content type from the extension, since browsers often report Word files as blank.
+const cvExtensions = ["pdf", "doc", "docx"];
 const maxCvBytes = 5 * 1024 * 1024;
 
 export default function CareersForm() {
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error" | "needs-check">("idle");
   const [cvError, setCvError] = useState("");
+  const [token, setToken] = useState<string | null>(null);
+  const [resetKey, setResetKey] = useState(0);
   const shownAt = useShownAt();
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -31,7 +30,7 @@ export default function CareersForm() {
 
     const cv = data.get("cv") as File;
     const ext = cv.name.split(".").pop()?.toLowerCase() ?? "";
-    if (!cvTypes[ext]) {
+    if (!cvExtensions.includes(ext)) {
       setCvError("Please upload your CV as a PDF or Word document (.pdf, .doc or .docx).");
       return;
     }
@@ -40,26 +39,24 @@ export default function CareersForm() {
       return;
     }
     setCvError("");
-    setStatus("sending");
-
-    // ponytail: the CV uploads before the row is saved, so a failed save leaves an orphan file in the bucket
-    const path = `${crypto.randomUUID()}/${cv.name.replace(/[^\w.-]/g, "_")}`;
-    const upload = await supabase.storage.from("cv-files").upload(path, cv, { contentType: cvTypes[ext] });
-    if (upload.error) {
-      console.error(upload.error);
-      setStatus("error");
+    if (!token) {
+      setStatus("needs-check");
       return;
     }
+    setStatus("sending");
 
-    const { error } = await supabase.from("job_applications").insert({
-      name: String(data.get("name") ?? "").trim(),
-      email: String(data.get("email") ?? "").trim(),
-      file_path: path,
-      consent_given_at: new Date().toISOString(),
-    });
-    if (error) {
-      console.error(error);
+    try {
+      await submitForm(
+        "careers",
+        { name: String(data.get("name") ?? ""), email: String(data.get("email") ?? ""), consent: true },
+        [cv],
+        token,
+        String(data.get("website") ?? ""),
+      );
+    } catch (err) {
+      console.error(err);
       setStatus("error");
+      setResetKey((k) => k + 1);
       return;
     }
     form.reset();
@@ -109,6 +106,8 @@ export default function CareersForm() {
         </span>
       </label>
 
+      <Turnstile onToken={setToken} resetKey={resetKey} />
+
       <button
         type="submit"
         disabled={status === "sending"}
@@ -116,6 +115,7 @@ export default function CareersForm() {
       >
         {status === "sending" ? "Sending..." : "Submit"}
       </button>
+      {status === "needs-check" && !token && <p role="alert" className="text-sm text-red-700">{TURNSTILE_WAIT_MESSAGE}</p>}
       {status === "error" && (
         <p role="alert" className="text-sm text-red-700">
           Something went wrong sending your CV. Please try again or call us on 01323 846061.
