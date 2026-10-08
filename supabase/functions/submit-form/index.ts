@@ -179,7 +179,8 @@ Deno.serve(async (req) => {
       console.warn("submit-form rejected:", err.message);
       return json({ error: "Your submission could not be accepted." }, 400, origin);
     }
-    console.error("submit-form failed:", err instanceof Error ? err.message : "unknown error");
+    // Supabase database errors are plain objects, not Error instances. Neither includes secrets.
+    console.error("submit-form failed:", (err as { message?: string } | null)?.message ?? "unknown error");
     return json({ error: "Something went wrong." }, 500, origin);
   }
 });
