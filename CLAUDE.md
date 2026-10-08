@@ -8,6 +8,7 @@ SLS Fabrications is a welding and steel fabrication workshop based in Hailsham, 
 - Phone: 01323 846061
 - Hours: Mon to Fri, 7:30am to 5:00pm
 - Small team (5 to 15 people)
+- Legal entity: SLS Fabrications Limited, company number 03187824, registered office 30-34 North Street, Hailsham, East Sussex, BN27 1DW (as given in the approved Privacy Policy and Terms, 2026-10-08).
 - People: Rob (owner), Rachael (business consultant), the developer (19, works on the site and later an internal workshop app)
 
 ## Project goal
@@ -50,7 +51,8 @@ Build the company website now, and later an internal workshop efficiency app (Su
 - Lock-down SQL files, run in this order in the SQL Editor: (1) `supabase/save-current-policies.sql` (keep the result), (2) `supabase/lock-down-direct-inserts.sql`, (3) `supabase/lock-down-checks.sql` (both queries should return no rows).
 
 ## Site structure (agreed)
-Five pages: **About, Capabilities, Industries, Projects, Contact** (no "Our" prefix). Footer has Find Us (map), Call Us, Opening Hours and links to Privacy, Terms, Cookies.
+Five pages: **About, Capabilities, Industries, Projects, Contact** (no "Our" prefix). Footer has Find Us, Call Us, Opening Hours, a click-to-load Google Map and links to Privacy, Terms, Cookies.
+- Footer map (`src/components/MapEmbed.tsx`): nothing is requested from Google until the visitor clicks "Show map" (placeholder line: "Loads a map from Google. See our Cookie Policy."). Then the same embed iframe loads. Built 2026-10-08. The "Get directions" link also only contacts Google when clicked.
 - **About**: placeholder. Needs team, workshop photo, mission statement (from Rob).
 - **Capabilities**: tile grid, built. See below.
 - **Industries**: tile grid with titles only, built. Same TileGrid component as Capabilities. Not clickable yet. 12 sectors, no client names. Sector wording to be confirmed with Rob.
@@ -88,7 +90,7 @@ Five pages: **About, Capabilities, Industries, Projects, Contact** (no "Our" pre
 - Client company names must not be published without explicit permission.
 
 ## Legal and compliance status
-- Privacy Policy, Terms of Use, Cookie Policy: drafted and live as pages, NOT legally reviewed, placeholders for dates and contact details still to fill in.
+- Privacy Policy, Terms of Use, Cookie Policy: approved text live since 2026-10-08 ("Last updated: 8 October 2026"), word for word in `app/privacy`, `app/terms`, `app/cookies`. The Privacy Policy deliberately shows "ICO registration number: [add once registered]" until ICO registration is done. They state: no analytics or advertising, the site sets no cookies of its own, Supabase database in London, Turnstile on the forms, Google Maps only after a click, 12-month retention for quote, brochure and CV data. Any change to the site that affects these (analytics, new services, cookies, retention) needs the policies updated first.
 - Company is NOT yet registered with the ICO. This must be done before any live data collection (quote form, brochure, analytics) on the real domain.
 - Analytics: undecided. The developer leans Google Analytics for now; Rachael to confirm. Google Analytics needs a consent banner before go-live (UK PECR). Plausible/Fathom were the alternatives (no cookie banner). Nothing is installed yet and nothing should be until go-live.
 
@@ -110,5 +112,5 @@ Five pages: **About, Capabilities, Industries, Projects, Contact** (no "Our" pre
 - Rachael: analytics decision (Google Analytics with banner, or Plausible). Asked 2026-10-08. Key deciding question put to her: is paid advertising (Google Ads) planned? Also proposed an optional "How did you hear about us?" field on the quote form (not yet agreed), plus Google Search Console and Google Business Profile.
 - Rob: asked 2026-10-08 about recovering the company Facebook page.
 - Supabase / Turnstile (in this order): create the `submit-form` function in the dashboard and paste the code, set the `TURNSTILE_SECRET_KEY` secret, add `NEXT_PUBLIC_TURNSTILE_SITE_KEY` to the Cloudflare build variables, push, test all three forms on the preview, then run `supabase/save-current-policies.sql` (keep the result), `supabase/lock-down-direct-inserts.sql` and `supabase/lock-down-checks.sql`, and test again.
-- Privacy Policy and Cookie Policy must mention Cloudflare Turnstile (bot check on the forms).
-- Build: brochure emailing, Projects case studies, About page, homepage, legal page fill-in and review, attach domain to Worker, retire the old Netlify site.
+- Add the ICO registration number to the Privacy Policy once registered.
+- Build: brochure emailing, Projects case studies, About page, homepage, attach domain to Worker, retire the old Netlify site.

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import MapEmbed from "@/components/MapEmbed";
 
 const address = "Unit 2 Hythe Works, Diplocks Way, Hailsham BN27 3JF, United Kingdom";
 const mapsQuery = encodeURIComponent(address);
@@ -34,11 +35,10 @@ export default function Footer() {
         </div>
       </div>
       <div className="mt-6">
-        <iframe
+        <MapEmbed
           title="Map showing SLS Fabrications location"
           src={`https://www.google.com/maps?q=${mapsQuery}&output=embed`}
-          width="100%" height="200" style={{ border: 0 }} loading="lazy"
-        ></iframe>
+        />
       </div>
       <div className="flex gap-4 mt-4">
         <Link href="/privacy">Privacy Policy</Link>

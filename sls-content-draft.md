@@ -92,6 +92,8 @@ National and international delivery available, so your finished fabrication reac
 
 ## Privacy Policy (Draft)
 
+*Superseded 2026-10-08: the approved text is live in `app/privacy/page.tsx`. Kept here for history only.*
+
 **Last updated: [date]**
 
 SLS Fabrications ("we", "us", "our") is committed to protecting your privacy. This policy explains what personal data we collect, why, and how we use it, in line with UK GDPR.
@@ -122,6 +124,8 @@ Questions about this policy: [email / address]
 
 ## Terms of Use (Draft)
 
+*Superseded 2026-10-08: the approved text is live in `app/terms/page.tsx`. Kept here for history only.*
+
 **Last updated: [date]**
 
 By using this website, you agree to the following terms.
@@ -144,6 +148,8 @@ We may update these terms from time to time. Continued use of the site constitut
 ---
 
 ## Cookie Policy (Draft)
+
+*Superseded 2026-10-08: the approved text is live in `app/cookies/page.tsx`. Kept here for history only.*
 
 **Last updated: [date]**
 
