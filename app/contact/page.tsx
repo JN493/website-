@@ -4,6 +4,14 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { Honeypot, looksLikeBot, useShownAt } from "@/components/SpamGuard";
 
+// Invisible copy of the phone line under the Request a Quote and Join Our Team buttons,
+// so all three buttons line up at desktop width. Hidden entirely on phones, where cards stack.
+const phoneSpacer = (
+  <p aria-hidden="true" className="invisible hidden md:block text-sm mt-4">
+    Prefer to talk on the phone? Call us on 01323 846061
+  </p>
+);
+
 export default function Contact() {
   const [showQuoteForm, setShowQuoteForm] = useState(false);
   const [consent, setConsent] = useState(false);
@@ -91,6 +99,7 @@ export default function Contact() {
                 >
                   Request a Quote
                 </button>
+                {phoneSpacer}
               </div>
             </section>
 
@@ -116,6 +125,7 @@ export default function Contact() {
                 <Link href="/careers" className="border px-6 py-3 font-semibold inline-block">
                   Join Our Team
                 </Link>
+                {phoneSpacer}
               </div>
             </section>
           </div>

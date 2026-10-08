@@ -85,7 +85,9 @@ export default function CareersForm() {
       </label>
 
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium">CV</span>
+        <span className="text-sm font-medium">
+          CV <span className="font-normal text-gray-500">(PDF or Word, max 5 MB)</span>
+        </span>
         <input
           name="cv"
           type="file"
