@@ -35,7 +35,7 @@
 **Confirmed business address:**
 SLS Fabrications
 Unit 2 Hythe Works, Diplocks Way
-Hailsham BN27 3JF
+Hailsham, BN27 3JF
 United Kingdom
 
 *Use this for the footer, Contact page, and Google Business Profile listing.*
@@ -45,6 +45,8 @@ United Kingdom
 ## Capabilities Page — Descriptions
 
 *Signed off. Verify any specific claims (certifications, capacity) with Rob before publishing.*
+
+*Updated 2026-10-08: now 12 tiles in workflow order: On-Site Surveying, CAD Design, Laser Cutting, Punching, Folding, Rolling, Tube Bending, CNC Machining, Welding, Finishing, Powder Coating, Delivery. Descriptions below are not in that order. The live copy is in `src/lib/capabilities.ts`.*
 
 **Welding**
 Skilled welding across a range of materials, built to the standard your project and your industry demand. This is the core of what we do, and every other capability supports it.
@@ -67,11 +69,19 @@ Accurate punching across a wide range of hole types and sizes, suited to both on
 **Tube Bending**
 Custom tube bending for projects requiring precise angles, without compromising structural integrity.
 
-**Finishing — Polishing, Galvanisation & Chemical Oxidation**
-A range of finishing options to protect and present your finished product, from a polished surface finish to galvanisation for long-term corrosion resistance.
+**Finishing** *(block title shortened on 2026-10-08)*
+A range of finishing options to protect and present your finished product, from a polished surface finish to galvanisation for long-term corrosion resistance. Polishing, galvanisation and chemical oxidation are all available.
 
-**Partner Services — Laser Cutting, CNC Machining & Powder Coating**
-Through trusted partners, we extend our in-house capability with laser cutting, CNC machining, and powder coating, giving you a complete solution without managing multiple suppliers yourself.
+**Laser Cutting** *(drafted from the old Partner Services paragraph, approved 2026-10-08)*
+Accurate laser cutting to give your project clean, precise profiles from the start.
+
+**CNC Machining** *(as above)*
+Precision CNC machining for components that need tight, repeatable accuracy.
+
+**Powder Coating** *(as above)*
+A durable, even powder-coated finish to protect your finished product and give it a professional look.
+
+*The old combined "Partner Services" paragraph ("Through trusted partners, we extend our in-house capability with laser cutting, CNC machining, and powder coating...") is no longer used on the grid. The developer will cover partner details on a detail page later.*
 
 **Delivery**
 National and international delivery available, so your finished fabrication reaches you wherever your project is based.
@@ -155,7 +165,7 @@ We need to pick a tool to track website visitors (how many people visit, which p
 
 | | Google Analytics | Plausible | Fathom |
 |---|---|---|---|
-| **Cost** | Free | ~£7-9/month | ~£11-14/month |
+| **Cost** | Free | $9/month for up to 10k pageviews, priced in US dollars, 30-day free trial (checked 2026-10-08) | Not checked, earlier estimate of ~£11-14/month is unverified |
 | **Cookie banner needed?** | Yes | No | No |
 | **Data depth** | Very detailed | Simple, essential numbers | Simple, essential numbers |
 | **Privacy stance** | Standard | Strong — no personal data collected | Strongest — EU-only data storage |
@@ -165,6 +175,8 @@ We need to pick a tool to track website visitors (how many people visit, which p
 **Our recommendation**: Plausible, as the best balance of cost and simplicity, unless there's a reason to prefer Fathom's stricter EU data handling.
 
 **Decision needed**: which option to go with, so the cookie policy and site build can be finalised.
+
+**Status 2026-10-08**: the developer is leaning Google Analytics for now, pending Rachael. Google Analytics would need a cookie consent banner before go-live. Nothing is installed; the preview site is behind Cloudflare Access so analytics would only record the developer's own visits.
 
 ---
 
