@@ -15,6 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://slsfabrications.com"),
   title: "SLS Fabrications | Steel Welding & Fabrication in Hailsham",
   description: "Steel fabrication, welding, folding and finishing from our Hailsham, East Sussex workshop.",
 };

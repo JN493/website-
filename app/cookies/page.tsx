@@ -1,3 +1,10 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Cookie Policy | SLS Fabrications",
+  alternates: { canonical: "/cookies" },
+};
+
 export default function Cookies() {
   return (
     <main className="p-6 max-w-2xl mx-auto text-sm leading-relaxed">

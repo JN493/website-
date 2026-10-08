@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Our Work & Case Studies | SLS Fabrications",
+  description: "Browse real fabrication projects across industries, or download our brochure to see the full range of SLS Fabrications' work.",
+  alternates: { canonical: "/projects" },
+};
 
 export default function Projects() {
   return (

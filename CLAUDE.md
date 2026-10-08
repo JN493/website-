@@ -24,6 +24,12 @@ Build the company website now, and later an internal workshop efficiency app (Su
 - Domain slsfabrications.com: registered and DNS-hosted on Cloudflare (Full setup). Two DNS-only CNAME records (`@` and `www`) still point to `slsfabs.netlify.app`, so the public domain still shows the OLD site. The domain is NOT yet attached to the Worker. When attached, confirm the public domain opens without a login (Access must not cover it).
 - slsfabrications.co.uk is purchased but parked and unconnected.
 
+## Search engine basics (built 2026-10-08)
+- Per-page `metadata` (title, description, relative canonical) on every page; `metadataBase` is https://slsfabrications.com in `app/layout.tsx`. No title template, so page titles are used as-is. Contact metadata lives in `app/contact/layout.tsx` (the page is a client component). Strings are in `sls-content-draft.md`.
+- `app/not-found.tsx` builds to `out/404.html`, served for unknown URLs via `not_found_handling: "404-page"` in `wrangler.jsonc`.
+- `app/sitemap.ts` and `app/robots.ts` (`force-static`) build to `out/sitemap.xml` and `out/robots.txt`. Add new pages to the sitemap list.
+- Icons: `app/favicon.ico`, `app/icon.png` (192x192), `app/apple-icon.png` (180x180), the SLS logo mark.
+
 ## Backend: Supabase
 - Table `quote_requests` (name, company, phone, email, project details, `submission_description`, `file_paths text[]`, `consent_given_at`). Optional Company is sent as an empty string (column is NOT NULL).
 - Private storage bucket `quote-files`; uploads go to a random folder per submission.
@@ -90,4 +96,4 @@ Five pages: **About, Capabilities, Industries, Projects, Contact** (no "Our" pre
 - Rob: Microsoft admin login, ICO registration, mission statement, workshop photos, sector name wording, permission to name any clients, brochure PDF.
 - Rachael: analytics decision (Google Analytics with banner, or Plausible). Asked 2026-10-08. Key deciding question put to her: is paid advertising (Google Ads) planned? Also proposed an optional "How did you hear about us?" field on the quote form (not yet agreed), plus Google Search Console and Google Business Profile.
 - Rob: asked 2026-10-08 about recovering the company Facebook page.
-- Build: brochure form, Projects page, About page, homepage, SEO titles and descriptions, 404 page, sitemap, favicon, Turnstile spam protection, legal page fill-in and review, attach domain to Worker, retire the old Netlify site.
+- Build: brochure form, Projects page, About page, homepage, Turnstile spam protection, legal page fill-in and review, attach domain to Worker, retire the old Netlify site.

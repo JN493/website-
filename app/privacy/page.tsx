@@ -1,3 +1,10 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy | SLS Fabrications",
+  alternates: { canonical: "/privacy" },
+};
+
 export default function Privacy() {
   return (
     <main className="p-6 max-w-2xl mx-auto text-sm leading-relaxed">

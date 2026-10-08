@@ -1,5 +1,12 @@
+import type { Metadata } from "next";
 import TileGrid from "@/components/TileGrid";
 import { capabilities } from "@/lib/capabilities";
+
+export const metadata: Metadata = {
+  title: "Welding, Fabrication & CNC Services | Hailsham, East Sussex",
+  description: "From CAD design and welding to CNC machining and powder coating, explore our full range of fabrication capabilities.",
+  alternates: { canonical: "/capabilities" },
+};
 
 export default function Capabilities() {
   return (

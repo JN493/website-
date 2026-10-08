@@ -1,3 +1,11 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "SLS Fabrications | Steel Welding & Fabrication in Hailsham",
+  description: "Steel fabrication, welding, folding and finishing from our Hailsham, East Sussex workshop, trusted across multiple industries. Request a quote today.",
+  alternates: { canonical: "/" },
+};
+
 export default function Home() {
   return (
     <main className="p-6">

@@ -6,21 +6,23 @@
 
 ## SEO Titles & Meta Descriptions
 
+*Live on the site since 2026-10-08, word for word as below. Legal pages have titles only: "Privacy Policy | SLS Fabrications", "Terms of Use | SLS Fabrications", "Cookie Policy | SLS Fabrications".*
+
 **Home**
 - Title: `SLS Fabrications | Steel Welding & Fabrication in Hailsham`
-- Meta: Steel fabrication, welding, folding and finishing from our Hailsham, East Sussex workshop — trusted across multiple industries. Request a quote today.
+- Meta: Steel fabrication, welding, folding and finishing from our Hailsham, East Sussex workshop, trusted across multiple industries. Request a quote today.
 
 **About**
 - Title: `About SLS Fabrications | Hailsham, East Sussex`
-- Meta: Meet the team behind SLS Fabrications — skilled welders and fabricators delivering precision work from our Hailsham workshop.
+- Meta: Meet the team behind SLS Fabrications, skilled welders and fabricators delivering precision work from our Hailsham workshop.
 
 **Capabilities**
 - Title: `Welding, Fabrication & CNC Services | Hailsham, East Sussex`
-- Meta: From CAD design and welding to CNC machining and powder coating — explore our full in-house and partner fabrication capabilities.
+- Meta: From CAD design and welding to CNC machining and powder coating, explore our full range of fabrication capabilities.
 
 **Industries**
 - Title: `Industries We Serve | SLS Fabrications, Hailsham`
-- Meta: From airport infrastructure to pharmaceutical and defence — see the sectors SLS Fabrications has delivered real projects for, direct and as a trusted subcontractor.
+- Meta: From airport maintenance to pharmaceutical, see the sectors SLS Fabrications has delivered real projects for, direct and as a trusted subcontractor.
 
 *Confirmed by Rob: all 12 sectors are backed by real completed work (some direct, some subcontracted). See note below on naming client companies.*
 
@@ -30,7 +32,7 @@
 
 **Contact**
 - Title: `Contact SLS Fabrications | Hailsham Steel Fabricators`
-- Meta: Get in touch with SLS Fabrications, Unit 2 Hythe Works, Diplocks Way, Hailsham, for a quote, site survey or general enquiry. National and international delivery available.
+- Meta: Get in touch with SLS Fabrications in Hailsham for a quote, site survey or general enquiry. National and international delivery available.
 
 **Confirmed business address:**
 SLS Fabrications

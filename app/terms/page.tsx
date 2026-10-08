@@ -1,3 +1,10 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Terms of Use | SLS Fabrications",
+  alternates: { canonical: "/terms" },
+};
+
 export default function Terms() {
   return (
     <main className="p-6 max-w-2xl mx-auto text-sm leading-relaxed">
