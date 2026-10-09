@@ -1,6 +1,6 @@
 # SLS Fabrications Website: Project Context
 
-Last updated: 2026-10-08. Keep this file current: after any task that changes the site, hosting, content decisions or status, update the relevant section in the same commit.
+Last updated: 2026-10-09. Keep this file current: after any task that changes the site, hosting, content decisions or status, update the relevant section in the same commit.
 
 ## About the business
 SLS Fabrications is a welding and steel fabrication workshop based in Hailsham, East Sussex, UK.
@@ -50,6 +50,17 @@ Build the company website now, and later an internal workshop efficiency app (Su
 - `supabase/lock-down-direct-inserts.sql` removes the anon INSERT policies and grants so the function is the only way in. Run it ONLY after the function is deployed and all three forms are tested through it.
 - Lock-down SQL files, run in this order in the SQL Editor: (1) `supabase/save-current-policies.sql` (keep the result), (2) `supabase/lock-down-direct-inserts.sql`, (3) `supabase/lock-down-checks.sql` (both queries should return no rows).
 
+### Tracking hooks, source capture and contacts (code written 2026-10-09)
+- RULE: no cookies, localStorage, sessionStorage or IndexedDB anywhere on the site. The Cookie Policy says the site stores nothing in the browser. Anything that needs remembering lives in JavaScript memory only.
+- `src/lib/track.ts` `track(event)` pushes `{ event }` onto `window.dataLayer`. Event name only, never personal data. No GTM, GA or any third-party script is installed; until one is (with policy updates first), these are harmless array items.
+- Events: `quote_request_submitted`, `brochure_request_submitted`, `cv_submitted` fire only after a form fully succeeds (row saved and any file uploads finished), never on click, failure or the bot fake-success. `phone_click` and `email_click` fire from one delegated click listener for every `tel:` and `mailto:` link on the site.
+- `src/components/SiteTracking.tsx` (mounted once in `app/layout.tsx`) holds that click listener and calls `captureSource()` on first load.
+- Source (`src/lib/source.ts`), held in a module-level variable only (survives client-side navigation, lost on reload): `landing_page` (path only), `referrer` (other sites only, hostname plus path), `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content` (trimmed, max 200). No gclid, fbclid or other IDs. `submitForm` sends it plus `submitted_from` (path at submit time) for quote and brochure only, never careers. The function keeps only known string values up to 200 characters, drops anything else and never rejects a submission over source data. Stored in matching columns on `quote_requests` and `brochure_requests`.
+- `contacts` table: one contact per email address (stored lowercased and trimmed, unique on `lower(email)`) across quote and brochure requests. A repeat submission is a new enquiry row linked by `contact_id` to the same contact; repeats are never rejected. The function calls `upsert_contact()` (service role only) before inserting the row: it updates `last_seen_at` and only overwrites name, phone and company with non-empty values. If the contact step fails, no row is inserted. Job applicants are never added to contacts.
+- Retention: delete a contact only when ALL its linked rows are past their retention period (quote: 12 months after last contact; brochure: 12 months after sent). The `contact_id` foreign keys block deleting a contact that still has linked rows.
+- `contacts` and `upsert_contact()` are locked down (RLS on, no policies, no privileges for anon/authenticated). `supabase/lock-down-checks.sql` covers them.
+- Run order for this change: (1) run `supabase/add-source-and-contacts.sql` in the Supabase SQL Editor, (2) deploy the updated `submit-form` function, (3) push the site. Pushing the site before steps 1 and 2 will make the quote and brochure forms fail. (Deploying the function before step 1 also breaks them, as it writes the new columns and calls `upsert_contact()`.)
+
 ## Site structure (agreed)
 Five pages: **About, Capabilities, Industries, Projects, Contact** (no "Our" prefix). Footer has Find Us, Call Us, Opening Hours, a click-to-load Google Map and links to Privacy, Terms, Cookies.
 - Footer map (`src/components/MapEmbed.tsx`): nothing is requested from Google until the visitor clicks "Show map" (placeholder line: "Loads a map from Google. See our Cookie Policy."). Then the same embed iframe loads. Built 2026-10-08. Position: right-hand fourth column of the footer grid from `lg` (1024px) up; below that it stacks under the other columns at full width, max 400px. Size is set once in `Footer.tsx` (`mapSize`: `--map-w` 280px, `--map-h` 180px). The "Get directions" link also only contacts Google when clicked.
@@ -90,7 +101,7 @@ Five pages: **About, Capabilities, Industries, Projects, Contact** (no "Our" pre
 - Client company names must not be published without explicit permission.
 
 ## Legal and compliance status
-- Privacy Policy, Terms of Use, Cookie Policy: approved text live since 2026-10-08 ("Last updated: 8 October 2026"), word for word in `app/privacy`, `app/terms`, `app/cookies`. The Privacy Policy deliberately shows "ICO registration number: [add once registered]" until ICO registration is done. They state: no analytics or advertising, the site sets no cookies of its own, Supabase database in London, Turnstile on the forms, Google Maps only after a click, 12-month retention for quote, brochure and CV data. Any change to the site that affects these (analytics, new services, cookies, retention) needs the policies updated first.
+- Privacy Policy, Terms of Use, Cookie Policy: approved text live since 2026-10-08 ("Last updated: 8 October 2026"), word for word in `app/privacy`, `app/terms`, `app/cookies`. The Privacy Policy deliberately shows "ICO registration number: [add once registered]" until ICO registration is done. Privacy Policy updated 2026-10-09 ("Last updated: 9 October 2026") with the "Where you found us." paragraph and the one-contact-record sentence. They state: no analytics or advertising, the site sets no cookies of its own, Supabase database in London, Turnstile on the forms, Google Maps only after a click, 12-month retention for quote, brochure and CV data. Any change to the site that affects these (analytics, new services, cookies, retention) needs the policies updated first.
 - Company is NOT yet registered with the ICO. This must be done before any live data collection (quote form, brochure, analytics) on the real domain.
 - Analytics: undecided. The developer leans Google Analytics for now; Rachael to confirm. Google Analytics needs a consent banner before go-live (UK PECR). Plausible/Fathom were the alternatives (no cookie banner). Nothing is installed yet and nothing should be until go-live.
 
@@ -113,4 +124,5 @@ Five pages: **About, Capabilities, Industries, Projects, Contact** (no "Our" pre
 - Rob: asked 2026-10-08 about recovering the company Facebook page.
 - Supabase / Turnstile (in this order): create the `submit-form` function in the dashboard and paste the code, set the `TURNSTILE_SECRET_KEY` secret, add `NEXT_PUBLIC_TURNSTILE_SITE_KEY` to the Cloudflare build variables, push, test all three forms on the preview, then run `supabase/save-current-policies.sql` (keep the result), `supabase/lock-down-direct-inserts.sql` and `supabase/lock-down-checks.sql`, and test again.
 - Add the ICO registration number to the Privacy Policy once registered.
+- Tracking and contacts (in this order): run `supabase/add-source-and-contacts.sql`, deploy the updated `submit-form` function, then push the site; then one real test per form and run `supabase/lock-down-checks.sql` (all queries return no rows, the last returns relrowsecurity = true).
 - Build: brochure emailing, Projects case studies, About page, homepage, attach domain to Worker, retire the old Netlify site.

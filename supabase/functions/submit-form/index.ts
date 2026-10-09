@@ -6,8 +6,12 @@
 //   SUPABASE_URL                - provided automatically
 //   SUPABASE_SERVICE_ROLE_KEY   - provided automatically
 //
-// Flow: check origin -> honeypot -> verify Turnstile -> validate fields and files
-// -> create signed upload URLs -> insert the row -> return the upload URLs.
+// Flow: check origin -> honeypot -> verify Turnstile -> validate fields, files and source
+// -> create signed upload URLs -> (quote/brochure) find-or-create the contact by email
+// -> insert the row -> return the upload URLs.
+//
+// Needs supabase/add-source-and-contacts.sql to have been run first (source columns,
+// contacts table, contact_id columns and the upsert_contact function).
 //
 // Known limitation: the row is saved before the browser uploads the files,
 // so a failed upload can leave a row whose file_paths point at missing files.
@@ -56,6 +60,18 @@ const FILE_RULES: Record<string, { bucket: string; min: number; max: number; max
   brochure: null,
   careers: { bucket: "cv-files", min: 1, max: 1, maxBytes: 5 * MB, cvOnly: true },
 };
+
+// Where the visitor came from (quote and brochure only). Optional: bad values are dropped, never rejected.
+const SOURCE_KEYS = [
+  "landing_page",
+  "referrer",
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_term",
+  "utm_content",
+  "submitted_from",
+];
 
 type FileInfo = { name: string; type: string; size: number };
 
@@ -121,6 +137,28 @@ function cleanFiles(form: string, raw: unknown): FileInfo[] {
   });
 }
 
+// Keeps only known keys whose values are non-empty strings of up to 200 characters after trimming.
+// The referrer is reduced to hostname plus path (no query string or hash).
+function cleanSource(raw: unknown): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (typeof raw !== "object" || raw === null) return out;
+  const input = raw as Record<string, unknown>;
+  for (const key of SOURCE_KEYS) {
+    if (typeof input[key] !== "string") continue;
+    let value = (input[key] as string).trim();
+    if (key === "referrer" && value) {
+      try {
+        const url = /^[a-z][a-z0-9+.-]*:\/\//i.test(value) ? new URL(value) : new URL(`https://${value}`);
+        value = url.hostname + url.pathname;
+      } catch {
+        continue;
+      }
+    }
+    if (value && value.length <= 200) out[key] = value;
+  }
+  return out;
+}
+
 Deno.serve(async (req) => {
   const origin = req.headers.get("Origin");
   if (origin && !ALLOWED_ORIGINS.includes(origin)) return json({ error: "Not allowed" }, 403, origin);
@@ -142,6 +180,7 @@ Deno.serve(async (req) => {
 
     const row: Record<string, unknown> = cleanFields(form, body.fields);
     const files = cleanFiles(form, body.files);
+    const source = form === "careers" ? {} : cleanSource(body.source); // careers never stores source
 
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
       auth: { persistSession: false },
@@ -166,8 +205,22 @@ Deno.serve(async (req) => {
       }
     }
 
+    // One contact per email across quote and brochure requests; a repeat is a new row on the same contact.
+    // If this fails, nothing is inserted, so a lead is never half-saved. Job applicants are not contacts.
+    if (form === "quote" || form === "brochure") {
+      const { data: contactId, error: contactError } = await supabase.rpc("upsert_contact", {
+        p_email: row.email,
+        p_name: row.name ?? null,
+        p_phone: row.phone ?? null,
+        p_company: row.company ?? null,
+      });
+      if (contactError || !contactId) throw contactError ?? new Error("no contact id");
+      row.contact_id = contactId;
+    }
+
     if (form === "quote") row.file_paths = uploads.map((u) => u.path);
     if (form === "careers") row.file_path = uploads[0].path;
+    Object.assign(row, source);
     row.consent_given_at = new Date().toISOString();
 
     const { error } = await supabase.from(TABLES[form]).insert(row);

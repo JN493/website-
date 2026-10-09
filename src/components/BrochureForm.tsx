@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { submitForm } from "@/lib/submitForm";
+import { track } from "@/lib/track";
 import { Honeypot, looksLikeBot, useShownAt } from "@/components/SpamGuard";
 import Turnstile, { TURNSTILE_WAIT_MESSAGE } from "@/components/Turnstile";
 
@@ -37,6 +38,7 @@ export default function BrochureForm() {
       setResetKey((k) => k + 1);
       return;
     }
+    track("brochure_request_submitted"); // only after the row is saved
     form.reset();
     setStatus("sent");
   }

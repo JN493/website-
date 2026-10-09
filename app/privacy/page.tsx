@@ -12,7 +12,7 @@ export default function Privacy() {
   return (
     <main className="p-6 max-w-2xl mx-auto text-sm leading-relaxed">
       <h1 className="text-3xl font-bold mb-6">Privacy Policy</h1>
-      <p className="mb-4">Last updated: 8 October 2026</p>
+      <p className="mb-4">Last updated: 9 October 2026</p>
       <p className="mb-4">
         This policy explains what personal data SLS Fabrications Limited collects through this website, why we collect it, how long we keep it and what your rights are. It follows UK data protection law (UK GDPR and the Data Protection Act 2018).
       </p>
@@ -37,11 +37,15 @@ export default function Privacy() {
       <p className="mb-4">
         <strong>Brochure requests.</strong> If you ask for our brochure we collect your email address and the time you agreed. We use it to send you the brochure. We rely on your consent, which you give by ticking the box. We keep it for 12 months after we send the brochure, then delete it.
       </p>
+      <p className="mb-4">If you contact us more than once with the same email address, we keep your details together in one contact record.</p>
       <p className="mb-4">
         <strong>Applications to join our team.</strong> If you send us your CV we collect your name, email address and your CV. We use it to consider you for roles, now or in the future. We rely on your consent, which you give by ticking the box. We keep it for 12 months, then delete it.
       </p>
       <p className="mb-4">
         <strong>Technical data.</strong> When you use a form, the security check described below handles your IP address and some browser information. We do not use this data for anything else.
+      </p>
+      <p className="mb-4">
+        <strong>Where you found us.</strong> When you ask for a quote or the brochure, we also record the page you were on, the website you came from and any campaign details in the link you used. We use this to see which of our marketing brings in enquiries. We keep it with the request it came with.
       </p>
       <p className="mb-4">
         We do not use analytics or advertising tools on this website at the moment. If we add them, we will update this policy and our Cookie Policy first.

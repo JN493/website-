@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { submitForm } from "@/lib/submitForm";
+import { track } from "@/lib/track";
 import { Honeypot, looksLikeBot, useShownAt } from "@/components/SpamGuard";
 import Turnstile, { TURNSTILE_WAIT_MESSAGE } from "@/components/Turnstile";
 
@@ -71,6 +72,7 @@ export default function Contact() {
       return;
     }
 
+    track("quote_request_submitted"); // only after the row is saved and files have uploaded
     form.reset();
     setConsent(false);
     setStatus("sent");
