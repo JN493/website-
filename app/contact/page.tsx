@@ -14,12 +14,24 @@ const phoneSpacer = (
   </p>
 );
 
+// Same limits as the submit-form Edge Function (quote: up to 10 files, 20 MB each). The function still checks them.
+const MAX_QUOTE_FILES = 10;
+const MAX_QUOTE_FILE_BYTES = 20 * 1024 * 1024;
+
+function checkQuoteFiles(files: File[]) {
+  return {
+    tooMany: files.length > MAX_QUOTE_FILES,
+    tooBig: files.some((file) => file.size > MAX_QUOTE_FILE_BYTES),
+  };
+}
+
 export default function Contact() {
   const [showQuoteForm, setShowQuoteForm] = useState(false);
   const [consent, setConsent] = useState(false);
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error" | "needs-check">("idle");
   const [token, setToken] = useState<string | null>(null);
   const [resetKey, setResetKey] = useState(0);
+  const [fileProblems, setFileProblems] = useState({ tooMany: false, tooBig: false });
 
   // Projects page links here as /contact#quote to open the form directly.
   // The hash only exists in the browser, so it has to be read after the first render.
@@ -43,6 +55,11 @@ export default function Contact() {
       return;
     }
 
+    const files = (data.getAll("files") as File[]).filter((file) => file.size > 0);
+    const problems = checkQuoteFiles(files);
+    setFileProblems(problems);
+    if (problems.tooMany || problems.tooBig) return;
+
     if (!token) {
       setStatus("needs-check");
       return;
@@ -61,7 +78,7 @@ export default function Contact() {
           submission_description: text("submission_description"),
           consent,
         },
-        (data.getAll("files") as File[]).filter((file) => file.size > 0),
+        files,
         token,
         text("website"),
       );
@@ -122,6 +139,7 @@ export default function Contact() {
 
             <section className="border p-6 flex flex-col">
               <h2 className="text-xl font-semibold mb-2">Join Our Team</h2>
+              <p className="text-gray-600 text-sm">No current vacancies, but we&apos;d like to hear from you. Send us your CV.</p>
               <div className="mt-auto pt-6">
                 <Link href="/careers" className="border px-6 py-3 font-semibold inline-block">
                   Join Our Team
@@ -143,7 +161,10 @@ export default function Contact() {
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <button
             type="button"
-            onClick={() => setShowQuoteForm(false)}
+            onClick={() => {
+              setShowQuoteForm(false);
+              setFileProblems({ tooMany: false, tooBig: false }); // the file input is emptied when the form closes
+            }}
             className="text-sm text-gray-500 text-left"
           >
             ← Back
@@ -189,7 +210,22 @@ export default function Contact() {
 
           <label className="flex flex-col gap-1">
             <span className="text-sm font-medium">Upload drawings / files</span>
-            <input name="files" type="file" multiple className="border px-3 py-2" />
+            <input
+              name="files"
+              type="file"
+              multiple
+              onChange={(e) => setFileProblems(checkQuoteFiles(Array.from(e.currentTarget.files ?? [])))}
+              aria-invalid={fileProblems.tooMany || fileProblems.tooBig ? true : undefined}
+              aria-describedby={["files-hint", fileProblems.tooMany && "files-too-many", fileProblems.tooBig && "files-too-big"].filter(Boolean).join(" ")}
+              className="border px-3 py-2"
+            />
+            <span id="files-hint" className="text-sm text-gray-500">You can attach up to 10 files, 20 MB each.</span>
+            {fileProblems.tooMany && (
+              <span id="files-too-many" role="alert" className="text-sm text-red-700">Please attach no more than 10 files.</span>
+            )}
+            {fileProblems.tooBig && (
+              <span id="files-too-big" role="alert" className="text-sm text-red-700">One or more files are over 20 MB. Please choose smaller files.</span>
+            )}
           </label>
 
           <label className="flex items-start gap-2 text-sm">
