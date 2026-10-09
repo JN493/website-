@@ -1,0 +1,22 @@
+# Security headers for every response served from the static assets (Cloudflare Workers static assets).
+# Format: https://developers.cloudflare.com/workers/static-assets/headers/
+# Next.js copies this file from public/ into out/ at build time.
+#
+# Content-Security-Policy is REPORT-ONLY for now: violations show in the browser console but nothing is blocked.
+# Switch the header name to Content-Security-Policy only when asked, after testing on the preview.
+# script-src needs 'unsafe-inline' because the Next.js static export uses inline scripts. Tightening it means hashes.
+# style-src needs 'unsafe-inline' for inline style attributes (for example the footer map size).
+# Origins allowed: Cloudflare Turnstile (challenges.cloudflare.com), Supabase (submit-form function and signed file uploads),
+# Google Maps embed (www.google.com, only after "Show map" is clicked).
+# When Google Analytics / Tag Manager or any other third-party service is added, add its origins here first.
+# Strict-Transport-Security is NOT set here: HSTS is set in the Cloudflare dashboard at go-live.
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://mvivwqyrtarryoomezgp.supabase.co https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+
+# Content-hashed build files (names change on every build), safe to cache for a year.
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable

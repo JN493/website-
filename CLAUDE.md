@@ -25,6 +25,15 @@ Build the company website now, and later an internal workshop efficiency app (Su
 - Domain slsfabrications.com: registered and DNS-hosted on Cloudflare (Full setup). Two DNS-only CNAME records (`@` and `www`) still point to `slsfabs.netlify.app`, so the public domain still shows the OLD site. The domain is NOT yet attached to the Worker. When attached, confirm the public domain opens without a login (Access must not cover it).
 - slsfabrications.co.uk is purchased but parked and unconnected.
 
+## Security headers (added 2026-10-09)
+- `public/_headers` (copied by Next.js into `out/_headers`; Cloudflare Workers static assets applies it to asset responses, it is not served as a file). Format and limits: https://developers.cloudflare.com/workers/static-assets/headers/ (one splat per path, max 100 rules, 2,000 characters per line).
+- All paths (`/*`): `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()`, and `Content-Security-Policy-Report-Only`.
+- `/_next/static/*`: `Cache-Control: public, max-age=31536000, immutable` (every file there is content-hashed or inside a build-ID folder).
+- CSP is REPORT-ONLY until the developer says to switch it to enforcing (rename the header to `Content-Security-Policy`). Current policy: default-src self; script-src self unsafe-inline https://challenges.cloudflare.com; style-src self unsafe-inline; img-src self data: blob:; font-src self; connect-src self https://mvivwqyrtarryoomezgp.supabase.co https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com https://www.google.com; object-src none; base-uri self; form-action self; frame-ancestors none. unsafe-inline in script-src is needed for the Next.js static export inline scripts (tightening needs hashes).
+- Supabase storage uploads use the project origin because `useNewHostname` is not enabled in `src/lib/supabase.ts`. If it is ever enabled, add https://mvivwqyrtarryoomezgp.storage.supabase.co to connect-src.
+- The policy must be updated BEFORE adding Google Analytics / Tag Manager or any other third-party service (their origins are deliberately not listed yet).
+- Strict-Transport-Security is NOT in `_headers`: HSTS is set in the Cloudflare dashboard at go-live.
+
 ## Search engine basics (built 2026-10-08)
 - Per-page `metadata` (title, description, relative canonical) on every page; `metadataBase` is https://slsfabrications.com in `app/layout.tsx`. No title template, so page titles are used as-is. Contact metadata lives in `app/contact/layout.tsx` (the page is a client component). Strings are in `sls-content-draft.md`.
 - `app/not-found.tsx` builds to `out/404.html`, served for unknown URLs via `not_found_handling: "404-page"` in `wrangler.jsonc`.
