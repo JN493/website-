@@ -4,6 +4,7 @@ import "./globals.css";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import SiteTracking from "@/components/SiteTracking";
+import LocalBusinessJsonLd from "@/components/LocalBusinessJsonLd";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {children}
         <Footer />
         <SiteTracking />
+        <LocalBusinessJsonLd />
       </body>
     </html>
   );

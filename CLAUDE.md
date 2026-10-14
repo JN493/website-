@@ -39,6 +39,7 @@ Build the company website now, and later an internal workshop efficiency app (Su
 - `app/not-found.tsx` builds to `out/404.html`, served for unknown URLs via `not_found_handling: "404-page"` in `wrangler.jsonc`.
 - `app/sitemap.ts` and `app/robots.ts` (`force-static`) build to `out/sitemap.xml` and `out/robots.txt`. Add new pages to the sitemap list.
 - Icons: `app/favicon.ico`, `app/icon.png` (192x192), `app/apple-icon.png` (180x180), the SLS logo mark.
+- Structured data: `src/components/LocalBusinessJsonLd.tsx` (rendered once in `app/layout.tsx`) outputs a schema.org LocalBusiness JSON-LD block (name, legalName, url, telephone, Companies House number, workshop address); `app/sitemap.ts` and `app/robots.ts` build `sitemap.xml` and `robots.txt`. RULE: only verified facts in structured data (no hours, coordinates, socials, services, ratings, price range, email or logo until checked).
 
 ## Backend: Supabase
 - Table `quote_requests` (name, company, phone, email, project details, `submission_description`, `file_paths text[]`, `consent_given_at`). Optional Company is sent as an empty string (column is NOT NULL).
