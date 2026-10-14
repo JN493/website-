@@ -38,3 +38,21 @@ where routine_schema = 'public'
 
 -- Good result: one row, with relrowsecurity = true (row level security is on for contacts).
 select relname, relrowsecurity from pg_class where oid = 'public.contacts'::regclass;
+
+-- Good result: no rows returned (retention_log has no policies, so the website's roles cannot read or write it).
+select schemaname, tablename, policyname, cmd, roles
+from pg_policies
+where schemaname = 'public' and tablename = 'retention_log';
+
+-- Good result: no rows returned (anon and authenticated have no privileges of any kind on retention_log).
+select table_name, grantee, privilege_type
+from information_schema.role_table_grants
+where table_schema = 'public'
+  and table_name = 'retention_log'
+  and grantee in ('anon', 'authenticated');
+
+-- Good result: two rows (quote_requests, brochure_requests), each with confdeltype = 'a' (no action).
+-- 'c' (cascade) or 'n' (set null) would mean deleting a contact could change or remove requests.
+select conrelid::regclass as referencing_table, conname, confdeltype
+from pg_constraint
+where confrelid = 'public.contacts'::regclass and contype = 'f';
