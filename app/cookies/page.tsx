@@ -10,7 +10,7 @@ const phone = <a href="tel:01323846061" className="underline">01323 846061</a>;
 
 export default function Cookies() {
   return (
-    <main className="p-6 max-w-2xl mx-auto text-sm leading-relaxed">
+    <main id="main" className="p-6 max-w-2xl mx-auto text-sm leading-relaxed">
       <h1 className="text-3xl font-bold mb-6">Cookie Policy</h1>
       <p className="mb-4">Last updated: 8 October 2026</p>
       <p className="mb-4">Cookies are small files that a website saves on your device. This policy explains what this website does.</p>

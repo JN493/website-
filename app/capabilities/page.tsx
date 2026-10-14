@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function Capabilities() {
   return (
-    <main className="p-6 max-w-6xl mx-auto w-full">
+    <main id="main" className="p-6 max-w-6xl mx-auto w-full">
       <h1 className="text-3xl font-bold mb-6">Capabilities</h1>
       <TileGrid
         tiles={capabilities.map((c) => ({

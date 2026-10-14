@@ -24,14 +24,14 @@ export default function Footer() {
             href={`https://www.google.com/maps/search/?api=1&query=${mapsQuery}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block mt-2 underline"
+            className="inline-block py-2 -mb-2 underline"
           >
-            Get directions
+            Get directions<span className="sr-only"> (opens in a new tab)</span>
           </a>
         </div>
         <div>
           <h2 className="font-semibold text-gray-900 mb-2">Call Us</h2>
-          <a href="tel:+441323846061" className="underline">01323 846061</a>
+          <a href="tel:+441323846061" className="inline-block py-2 -my-2 underline">01323 846061</a>
         </div>
         <div>
           <h2 className="font-semibold text-gray-900 mb-2">Opening Hours</h2>
@@ -45,9 +45,9 @@ export default function Footer() {
         </div>
       </div>
       <div className="flex gap-4 mt-8">
-        <Link href="/privacy">Privacy Policy</Link>
-        <Link href="/terms">Terms of Use</Link>
-        <Link href="/cookies">Cookie Policy</Link>
+        <Link href="/privacy" className="py-2 -my-2">Privacy Policy</Link>
+        <Link href="/terms" className="py-2 -my-2">Terms of Use</Link>
+        <Link href="/cookies" className="py-2 -my-2">Cookie Policy</Link>
       </div>
       <p className="mt-4">&copy; 2026 SLS Fabrications</p>
     </footer>

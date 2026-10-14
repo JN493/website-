@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function Projects() {
   return (
-    <main className="p-6 max-w-2xl mx-auto w-full">
+    <main id="main" className="p-6 max-w-2xl mx-auto w-full">
       <h1 className="text-3xl font-bold mb-6">Projects</h1>
       <section className="border p-6">
         <h2 className="text-xl font-semibold mb-2">Discover what SLS Fabrications can do for your business</h2>

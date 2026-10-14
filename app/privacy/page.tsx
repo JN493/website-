@@ -10,7 +10,7 @@ const phone = <a href="tel:01323846061" className="underline">01323 846061</a>;
 
 export default function Privacy() {
   return (
-    <main className="p-6 max-w-2xl mx-auto text-sm leading-relaxed">
+    <main id="main" className="p-6 max-w-2xl mx-auto text-sm leading-relaxed">
       <h1 className="text-3xl font-bold mb-6">Privacy Policy</h1>
       <p className="mb-4">Last updated: 9 October 2026</p>
       <p className="mb-4">

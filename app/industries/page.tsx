@@ -24,7 +24,7 @@ const industries = [
 
 export default function Industries() {
   return (
-    <main className="p-6 max-w-6xl mx-auto w-full">
+    <main id="main" className="p-6 max-w-6xl mx-auto w-full">
       <h1 className="text-3xl font-bold mb-6">Industries</h1>
       <TileGrid tiles={industries.map((title) => ({ title }))} />
     </main>
