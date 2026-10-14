@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { submitForm } from "@/lib/submitForm";
 import { track } from "@/lib/track";
@@ -32,6 +32,24 @@ export default function Contact() {
   const [token, setToken] = useState<string | null>(null);
   const [resetKey, setResetKey] = useState(0);
   const [fileProblems, setFileProblems] = useState({ tooMany: false, tooBig: false });
+
+  // Keyboard focus: opening the form or pressing Back removes the element that had focus,
+  // so move it on purpose. Set by the button handlers, applied once the new content is rendered.
+  const focusAfterToggle = useRef<"name" | "request" | null>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
+  const requestButtonRef = useRef<HTMLButtonElement>(null);
+  const statusRef = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    if (focusAfterToggle.current === "name") nameRef.current?.focus();
+    if (focusAfterToggle.current === "request") requestButtonRef.current?.focus();
+    focusAfterToggle.current = null;
+  }, [showQuoteForm]);
+
+  // The form is replaced by the thanks message, so focus moves to the message.
+  useEffect(() => {
+    if (status === "sent") statusRef.current?.focus();
+  }, [status]);
 
   // Projects page links here as /contact#quote to open the form directly.
   // The hash only exists in the browser, so it has to be read after the first render.
@@ -99,6 +117,13 @@ export default function Contact() {
     <main className={`p-6 mx-auto w-full ${showQuoteForm ? "max-w-2xl" : "max-w-6xl"}`}>
       <h1 className="text-3xl font-bold mb-6">{showQuoteForm ? "Request a Quote" : "Contact"}</h1>
 
+      {/* Always on the page (empty until success) so screen readers announce the thanks message. */}
+      <p ref={statusRef} role="status" aria-live="polite" tabIndex={-1}>
+        {showQuoteForm && status === "sent"
+          ? "Thanks, we've received your request and will be in touch soon to discuss the details further and arrange a meeting if needed."
+          : ""}
+      </p>
+
       {!showQuoteForm && (
         <>
           <p className="text-gray-600 mb-8">
@@ -112,7 +137,11 @@ export default function Contact() {
               </p>
               <div className="mt-auto pt-6">
                 <button
-                  onClick={() => setShowQuoteForm(true)}
+                  ref={requestButtonRef}
+                  onClick={() => {
+                    focusAfterToggle.current = "name";
+                    setShowQuoteForm(true);
+                  }}
                   className="bg-black text-white px-6 py-3 font-semibold"
                 >
                   Request a Quote
@@ -151,17 +180,12 @@ export default function Contact() {
         </>
       )}
 
-      {showQuoteForm && status === "sent" && (
-        <p role="status">
-          Thanks, we&apos;ve received your request and will be in touch soon to discuss the details further and arrange a meeting if needed.
-        </p>
-      )}
-
       {showQuoteForm && status !== "sent" && (
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <button
             type="button"
             onClick={() => {
+              focusAfterToggle.current = "request";
               setShowQuoteForm(false);
               setFileProblems({ tooMany: false, tooBig: false }); // the file input is emptied when the form closes
             }}
@@ -174,7 +198,7 @@ export default function Contact() {
 
           <label className="flex flex-col gap-1">
             <span className="text-sm font-medium">Name</span>
-            <input name="name" type="text" required maxLength={200} className="border px-3 py-2" />
+            <input ref={nameRef} name="name" type="text" required maxLength={200} className="border px-3 py-2" />
           </label>
 
           <label className="flex flex-col gap-1">
@@ -193,24 +217,25 @@ export default function Contact() {
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium">Project details</span>
+            <span className="text-sm font-medium">Project details (optional)</span>
             <textarea name="project_details" rows={4} maxLength={5000} className="border px-3 py-2"></textarea>
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium">Describe what you&apos;re submitting</span>
+            <span className="text-sm font-medium">Describe what you&apos;re submitting (optional)</span>
             <textarea
               name="submission_description"
               rows={2}
               maxLength={1000}
               placeholder="e.g. 3 drawings for a steel bracket, revision 2"
-              className="border px-3 py-2"
+              className="border px-3 py-2 placeholder:text-gray-600"
             ></textarea>
           </label>
 
-          <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium">Upload drawings / files</span>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="quote-files" className="text-sm font-medium">Upload drawings / files (optional)</label>
             <input
+              id="quote-files"
               name="files"
               type="file"
               multiple
@@ -226,7 +251,7 @@ export default function Contact() {
             {fileProblems.tooBig && (
               <span id="files-too-big" role="alert" className="text-sm text-red-700">One or more files are over 20 MB. Please choose smaller files.</span>
             )}
-          </label>
+          </div>
 
           <label className="flex items-start gap-2 text-sm">
             <input

@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { submitForm } from "@/lib/submitForm";
 import { track } from "@/lib/track";
@@ -17,6 +17,12 @@ export default function CareersForm() {
   const [token, setToken] = useState<string | null>(null);
   const [resetKey, setResetKey] = useState(0);
   const shownAt = useShownAt();
+  const statusRef = useRef<HTMLParagraphElement>(null);
+
+  // The form is replaced by the thanks message, so focus moves to the message.
+  useEffect(() => {
+    if (status === "sent") statusRef.current?.focus();
+  }, [status]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -65,11 +71,13 @@ export default function CareersForm() {
     setStatus("sent");
   }
 
-  if (status === "sent") {
-    return <p role="status">Thanks, we&apos;ve received your CV.</p>;
-  }
-
   return (
+    <>
+      {/* Always on the page (empty until success) so screen readers announce the thanks message. */}
+      <p ref={statusRef} role="status" aria-live="polite" tabIndex={-1}>
+        {status === "sent" ? "Thanks, we've received your CV." : ""}
+      </p>
+      {status !== "sent" && (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <Honeypot />
 
@@ -83,11 +91,12 @@ export default function CareersForm() {
         <input name="email" type="email" required maxLength={200} autoComplete="email" className="border px-3 py-2" />
       </label>
 
-      <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium">
+      <div className="flex flex-col gap-1">
+        <label htmlFor="cv-file" className="text-sm font-medium">
           CV <span className="font-normal text-gray-500">(PDF or Word, max 5 MB)</span>
-        </span>
+        </label>
         <input
+          id="cv-file"
           name="cv"
           type="file"
           required
@@ -98,7 +107,7 @@ export default function CareersForm() {
           className="border px-3 py-2"
         />
         {cvError && <span id="cv-error" role="alert" className="text-sm text-red-700">{cvError}</span>}
-      </label>
+      </div>
 
       <label className="flex items-start gap-2 text-sm">
         <input type="checkbox" required className="mt-1" />
@@ -124,5 +133,7 @@ export default function CareersForm() {
         </p>
       )}
     </form>
+      )}
+    </>
   );
 }

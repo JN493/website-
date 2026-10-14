@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { submitForm } from "@/lib/submitForm";
 import { track } from "@/lib/track";
@@ -11,6 +11,12 @@ export default function BrochureForm() {
   const [token, setToken] = useState<string | null>(null);
   const [resetKey, setResetKey] = useState(0);
   const shownAt = useShownAt();
+  const statusRef = useRef<HTMLParagraphElement>(null);
+
+  // The form is replaced by the thanks message, so focus moves to the message.
+  useEffect(() => {
+    if (status === "sent") statusRef.current?.focus();
+  }, [status]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -43,11 +49,13 @@ export default function BrochureForm() {
     setStatus("sent");
   }
 
-  if (status === "sent") {
-    return <p role="status">Thanks, we&apos;ll send you the brochure shortly.</p>;
-  }
-
   return (
+    <>
+      {/* Always on the page (empty until success) so screen readers announce the thanks message. */}
+      <p ref={statusRef} role="status" aria-live="polite" tabIndex={-1}>
+        {status === "sent" ? "Thanks, we'll send you the brochure shortly." : ""}
+      </p>
+      {status !== "sent" && (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <Honeypot />
 
@@ -80,5 +88,7 @@ export default function BrochureForm() {
         </p>
       )}
     </form>
+      )}
+    </>
   );
 }
