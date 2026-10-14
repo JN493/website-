@@ -2,7 +2,8 @@
 -- Run once in the Supabase SQL Editor BEFORE deploying the retention-cleanup function. Safe to re-run.
 --
 -- retention_log holds one row per run: when it ran, whether it was a dry run, whether the kill switch
--- stopped it, and per-table counts (would_delete / deleted / failed / more_remaining).
+-- stopped it, per-table counts (would_delete / deleted / failed / skipped / more_remaining), and, if a
+-- lookup failed and the run stopped before deleting anything, which step failed and its error code.
 -- It holds NO personal data: no names, emails, file names or record IDs.
 
 begin;
@@ -12,8 +13,10 @@ create table if not exists public.retention_log (
   run_at timestamptz not null default now(),
   dry_run boolean not null,
   killed boolean not null default false,
-  counts jsonb not null default '{}'::jsonb
+  counts jsonb not null default '{}'::jsonb,
+  error text -- e.g. "lookup failed: contacts for quotes (PGRST301)"; null for a normal run
 );
+alter table public.retention_log add column if not exists error text;
 
 -- Locked down like contacts: RLS on with no policies, no privileges for the website's roles.
 -- Only the service role (used by the function) can write it; read it in the dashboard.

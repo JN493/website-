@@ -8,6 +8,7 @@ import http from "node:http";
 function matches(row, key, raw) {
   const value = row[key];
   if (raw === "is.null") return value === null || value === undefined;
+  if (raw === "not.is.null") return value !== null && value !== undefined;
   if (raw.startsWith("eq.")) return String(value) === raw.slice(3);
   if (raw.startsWith("lt.")) return value !== null && value !== undefined && Date.parse(value) < Date.parse(raw.slice(3));
   if (raw.startsWith("in.(")) {
@@ -21,10 +22,23 @@ function query(rows, params) {
   let out = rows.filter((row) => [...params].every(([k, v]) => ["select", "order", "limit", "offset"].includes(k) || matches(row, k, v)));
   const order = params.get("order");
   if (order) {
-    const [col, dir] = order.split(".");
-    out = [...out].sort((a, b) => (Date.parse(a[col]) - Date.parse(b[col])) * (dir === "desc" ? -1 : 1));
+    const keys = order.split(",").map((o) => o.split("."));
+    const cmp = (a, b) => {
+      const [x, y] = [Date.parse(a), Date.parse(b)];
+      if (!Number.isNaN(x) && !Number.isNaN(y)) return x - y;
+      return String(a) < String(b) ? -1 : String(a) > String(b) ? 1 : 0;
+    };
+    out = [...out].sort((a, b) => {
+      for (const [col, dir] of keys) {
+        const c = cmp(a[col], b[col]) * (dir === "desc" ? -1 : 1);
+        if (c !== 0) return c;
+      }
+      return 0;
+    });
   }
-  if (params.get("limit")) out = out.slice(0, Number(params.get("limit")));
+  const offset = Number(params.get("offset") ?? 0);
+  if (params.get("limit")) out = out.slice(offset, offset + Number(params.get("limit")));
+  else out = out.slice(offset);
   const select = params.get("select");
   if (select && select !== "*") {
     const cols = select.split(",").map((c) => c.trim());
@@ -52,7 +66,11 @@ export function startFake(state) {
       if (rest) {
         const table = rest[1];
         const rows = (state.tables[table] ??= []);
-        if (req.method === "GET") return send(res, 200, query(rows, url.searchParams));
+        if (req.method === "GET") {
+          // Optional: state.failGet(table, params) returning true makes this lookup fail, like a database error.
+          if (state.failGet?.(table, url.searchParams)) return send(res, 500, { code: "XX000", message: "simulated lookup failure" });
+          return send(res, 200, query(rows, url.searchParams));
+        }
         if (req.method === "POST") {
           for (const r of [].concat(body)) rows.push({ id: `${table}-${rows.length + 1}`, run_at: new Date().toISOString(), ...r });
           return send(res, 201);

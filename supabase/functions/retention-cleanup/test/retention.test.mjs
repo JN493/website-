@@ -75,7 +75,7 @@ async function call(headers = { "x-retention-secret": SECRET }, method = "POST")
   const res = await handler(new Request("http://local/functions/v1/retention-cleanup", { method, headers }));
   return { status: res.status, body: await res.json() };
 }
-const pick = (c) => ({ would_delete: c.would_delete, deleted: c.deleted, failed: c.failed, more_remaining: c.more_remaining });
+const pick = (c) => ({ would_delete: c.would_delete, deleted: c.deleted, failed: c.failed, skipped: c.skipped, more_remaining: c.more_remaining });
 
 let passed = 0;
 async function test(name, body) {
@@ -95,6 +95,7 @@ console.log("retention-cleanup tests");
 await test("settings: 12 months everywhere, cap 100", () => {
   assert.deepEqual(fn.RETENTION_MONTHS, { quote_requests: 12, brochure_requests: 12, job_applications: 12, contacts: 12 });
   assert.equal(fn.MAX_DELETES_PER_TABLE_PER_RUN, 100);
+  assert.equal(fn.LOOKUP_PAGE_SIZE, 100);
 });
 
 await test("calls without the secret, with a wrong secret, or not POST are rejected and change nothing", async () => {
@@ -113,10 +114,10 @@ await test("DRY RUN is the default: counts what it would delete, deletes nothing
   const { status, body } = await call();
   assert.equal(status, 200);
   assert.equal(body.dry_run, true);
-  assert.deepEqual(pick(body.counts.quote_requests), { would_delete: 3, deleted: 0, failed: 0, more_remaining: false }); // q1 q5 q7
-  assert.deepEqual(pick(body.counts.brochure_requests), { would_delete: 2, deleted: 0, failed: 0, more_remaining: false }); // b7 b8
-  assert.deepEqual(pick(body.counts.job_applications), { would_delete: 3, deleted: 0, failed: 0, more_remaining: false }); // j1 j3 j4
-  assert.deepEqual(pick(body.counts.contacts), { would_delete: 3, deleted: 0, failed: 0, more_remaining: false }); // c1 c3 c5
+  assert.deepEqual(pick(body.counts.quote_requests), { would_delete: 3, deleted: 0, failed: 0, skipped: 0, more_remaining: false }); // q1 q5 q7
+  assert.deepEqual(pick(body.counts.brochure_requests), { would_delete: 2, deleted: 0, failed: 0, skipped: 0, more_remaining: false }); // b7 b8
+  assert.deepEqual(pick(body.counts.job_applications), { would_delete: 3, deleted: 0, failed: 0, skipped: 0, more_remaining: false }); // j1 j3 j4
+  assert.deepEqual(pick(body.counts.contacts), { would_delete: 3, deleted: 0, failed: 0, skipped: 0, more_remaining: false }); // c1 c3 c5
   assert.equal(snapshot(), before, "nothing changed");
   assert.ok(!state.requests.some((r) => r.startsWith("DELETE")), "no DELETE requests in a dry run");
   const log = state.tables.retention_log.at(-1);
@@ -154,10 +155,10 @@ await test("REAL run deletes exactly the expected rows and files, contacts last"
   const { status, body } = await call();
   assert.equal(status, 200);
   assert.equal(body.dry_run, false);
-  assert.deepEqual(pick(body.counts.quote_requests), { would_delete: 3, deleted: 2, failed: 1, more_remaining: false });
-  assert.deepEqual(pick(body.counts.brochure_requests), { would_delete: 2, deleted: 2, failed: 0, more_remaining: false });
-  assert.deepEqual(pick(body.counts.job_applications), { would_delete: 3, deleted: 2, failed: 1, more_remaining: false });
-  assert.deepEqual(pick(body.counts.contacts), { would_delete: 3, deleted: 3, failed: 0, more_remaining: false });
+  assert.deepEqual(pick(body.counts.quote_requests), { would_delete: 3, deleted: 2, failed: 1, skipped: 0, more_remaining: false });
+  assert.deepEqual(pick(body.counts.brochure_requests), { would_delete: 2, deleted: 2, failed: 0, skipped: 0, more_remaining: false });
+  assert.deepEqual(pick(body.counts.job_applications), { would_delete: 3, deleted: 2, failed: 1, skipped: 0, more_remaining: false });
+  assert.deepEqual(pick(body.counts.contacts), { would_delete: 3, deleted: 3, failed: 0, skipped: 0, more_remaining: false });
 
   assert.deepEqual(ids(state, "quote_requests"), ["q2", "q6", "q7"]); // q1 (old contact) and q5 (no contact, old) gone; q7 kept: file delete failed
   assert.deepEqual(ids(state, "brochure_requests"), ["b2", "b4", "b9"]); // b7 (sent long ago) and b8 (never sent, old) gone
@@ -186,10 +187,10 @@ await test("running again is safe: nothing new deleted, failed rows retried and 
   const before = snapshot();
   const { status, body } = await call();
   assert.equal(status, 200);
-  assert.deepEqual(pick(body.counts.quote_requests), { would_delete: 1, deleted: 0, failed: 1, more_remaining: false }); // q7 retried
-  assert.deepEqual(pick(body.counts.brochure_requests), { would_delete: 0, deleted: 0, failed: 0, more_remaining: false });
-  assert.deepEqual(pick(body.counts.job_applications), { would_delete: 1, deleted: 0, failed: 1, more_remaining: false }); // j4 retried
-  assert.deepEqual(pick(body.counts.contacts), { would_delete: 0, deleted: 0, failed: 0, more_remaining: false });
+  assert.deepEqual(pick(body.counts.quote_requests), { would_delete: 1, deleted: 0, failed: 1, skipped: 0, more_remaining: false }); // q7 retried
+  assert.deepEqual(pick(body.counts.brochure_requests), { would_delete: 0, deleted: 0, failed: 0, skipped: 0, more_remaining: false });
+  assert.deepEqual(pick(body.counts.job_applications), { would_delete: 1, deleted: 0, failed: 1, skipped: 0, more_remaining: false }); // j4 retried
+  assert.deepEqual(pick(body.counts.contacts), { would_delete: 0, deleted: 0, failed: 0, skipped: 0, more_remaining: false });
   assert.equal(snapshot(), before);
 });
 
@@ -224,13 +225,113 @@ await test("cap: at most 100 rows per table per run, the rest on the next run", 
   const fake2 = await startFake(big);
   env.SUPABASE_URL = fake2.url;
   const first = (await call()).body.counts.job_applications;
-  assert.deepEqual(pick(first), { would_delete: 100, deleted: 100, failed: 0, more_remaining: true });
+  assert.deepEqual(pick(first), { would_delete: 100, deleted: 100, failed: 0, skipped: 0, more_remaining: true });
   assert.equal(big.tables.job_applications.length, 5);
   assert.equal(big.storage["cv-files"].size, 5);
   const second = (await call()).body.counts.job_applications;
-  assert.deepEqual(pick(second), { would_delete: 5, deleted: 5, failed: 0, more_remaining: false });
+  assert.deepEqual(pick(second), { would_delete: 5, deleted: 5, failed: 0, skipped: 0, more_remaining: false });
   assert.equal(big.tables.job_applications.length, 0);
   fake2.close();
+});
+
+const emptyState = () => ({
+  tables: { contacts: [], quote_requests: [], brochure_requests: [], job_applications: [], retention_log: [] },
+  storage: { "quote-files": new Set(), "cv-files": new Set() },
+  failPaths: new Set(),
+  requests: [],
+});
+async function withFake(st, body) {
+  const f = await startFake(st);
+  env.SUPABASE_URL = f.url;
+  try { await body(); } finally { f.close(); }
+}
+
+await test("a quote whose contact is missing from the lookup is SKIPPED and kept, never treated as no contact", async () => {
+  const st = emptyState();
+  st.tables.quote_requests.push(
+    { id: "q-ghost", contact_id: "ghost-contact", created_at: OLD, file_paths: ["f-ghost/x.pdf"] }, // contact not returned by the lookup
+    { id: "q-null", contact_id: null, created_at: OLD, file_paths: [] }, // genuinely no contact: own created_at applies
+  );
+  st.storage["quote-files"].add("f-ghost/x.pdf");
+  await withFake(st, async () => {
+    delete env.RETENTION_DELETE_ENABLED;
+    const dry = (await call()).body.counts.quote_requests;
+    assert.deepEqual(pick(dry), { would_delete: 1, deleted: 0, failed: 0, skipped: 1, more_remaining: false });
+    env.RETENTION_DELETE_ENABLED = "true";
+    const real = (await call()).body.counts.quote_requests;
+    assert.deepEqual(pick(real), { would_delete: 1, deleted: 1, failed: 0, skipped: 1, more_remaining: false });
+    assert.deepEqual(ids(st, "quote_requests"), ["q-ghost"]);
+    assert.deepEqual(files(st, "quote-files"), ["f-ghost/x.pdf"]);
+    assert.equal(st.tables.retention_log.at(-1).counts.quote_requests.skipped, 1);
+  });
+});
+
+await test("a contact whose planned request could not be deleted is skipped, not deleted", async () => {
+  const st = emptyState();
+  st.tables.contacts.push({ id: "c9", last_seen_at: OLD });
+  st.tables.quote_requests.push({ id: "q9", contact_id: "c9", created_at: OLD, file_paths: ["f-q9/fails.pdf"] });
+  st.storage["quote-files"].add("f-q9/fails.pdf");
+  st.failPaths.add("f-q9/fails.pdf");
+  await withFake(st, async () => {
+    const { body } = await call();
+    assert.deepEqual(pick(body.counts.quote_requests), { would_delete: 1, deleted: 0, failed: 1, skipped: 0, more_remaining: false });
+    assert.deepEqual(pick(body.counts.contacts), { would_delete: 0, deleted: 0, failed: 0, skipped: 1, more_remaining: false });
+    assert.deepEqual(ids(st, "contacts"), ["c9"]);
+    assert.ok(!st.requests.includes("DELETE /rest/v1/contacts"), "no delete was even attempted");
+  });
+});
+
+for (const [label, failGet] of [
+  ["the contact lookup for quotes", (table, p) => table === "contacts" && (p.get("id") ?? "").startsWith("in.")],
+  ["the stale-contacts lookup", (table, p) => table === "contacts" && p.has("last_seen_at")],
+  ["the last lookup (brochures referencing contacts)", (table, p) => table === "brochure_requests" && p.has("contact_id")],
+]) {
+  await test(`a lookup error (${label}) stops the whole run before anything is deleted, and is logged`, async () => {
+    const st = seed();
+    st.failGet = failGet;
+    await withFake(st, async () => {
+      env.RETENTION_DELETE_ENABLED = "true";
+      const snap = () => JSON.stringify([st.tables.contacts, st.tables.quote_requests, st.tables.brochure_requests, st.tables.job_applications, [...st.storage["quote-files"]], [...st.storage["cv-files"]]]);
+      const before = snap();
+      const { status, body } = await call();
+      assert.equal(status, 500);
+      assert.equal(body.stopped, true);
+      assert.ok(!st.requests.some((r) => r.startsWith("DELETE")), "no DELETE requests at all");
+      assert.equal(snap(), before);
+      const log = st.tables.retention_log.at(-1);
+      assert.match(log.error, /^lookup failed: .+ \(XX000\)$/);
+      assert.equal(log.dry_run, false);
+      assert.ok(!JSON.stringify(log).includes("@"), "no personal data in the error log");
+    });
+  });
+}
+
+await test("paging: rows beyond the first lookup page are still found (no batch limit can hide them)", async () => {
+  const st = emptyState();
+  // 150 old quotes whose contacts are recent (kept) come first by created_at; 30 old quotes with stale contacts come after.
+  for (let i = 0; i < 150; i++) {
+    st.tables.contacts.push({ id: `recent-${i}`, last_seen_at: NEW });
+    st.tables.quote_requests.push({ id: `qa-${String(i).padStart(3, "0")}`, contact_id: `recent-${i}`, created_at: monthsAgo(20, i), file_paths: [] });
+  }
+  for (let i = 0; i < 30; i++) {
+    st.tables.contacts.push({ id: `stale-q-${i}`, last_seen_at: monthsAgo(13) });
+    st.tables.quote_requests.push({ id: `qb-${String(i).padStart(3, "0")}`, contact_id: `stale-q-${i}`, created_at: monthsAgo(14, i), file_paths: [] });
+  }
+  // 250 stale contacts with no requests at all: more than two lookup pages.
+  for (let i = 0; i < 250; i++) st.tables.contacts.push({ id: `stale-${String(i).padStart(3, "0")}`, last_seen_at: monthsAgo(15, i) });
+  await withFake(st, async () => {
+    delete env.RETENTION_DELETE_ENABLED;
+    const dry = (await call()).body.counts;
+    assert.deepEqual(pick(dry.quote_requests), { would_delete: 30, deleted: 0, failed: 0, skipped: 0, more_remaining: false });
+    assert.deepEqual(pick(dry.contacts), { would_delete: 100, deleted: 0, failed: 0, skipped: 0, more_remaining: true });
+    env.RETENTION_DELETE_ENABLED = "true";
+    const real = (await call()).body.counts;
+    assert.equal(real.quote_requests.deleted, 30);
+    assert.equal(st.tables.quote_requests.filter((q) => q.id.startsWith("qb-")).length, 0, "all 30 stale-contact quotes deleted");
+    assert.equal(st.tables.quote_requests.filter((q) => q.id.startsWith("qa-")).length, 150, "recent-contact quotes kept");
+    assert.equal(real.contacts.deleted, 100);
+    assert.equal(real.contacts.more_remaining, true);
+  });
 });
 
 console.log(`\n${passed} tests passed`);
