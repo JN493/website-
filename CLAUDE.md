@@ -104,6 +104,15 @@ Five pages: **About, Capabilities, Industries, Projects, Contact** (no "Our" pre
 - Homepage hero: three photos, subtle motion (parallax or slow zoom, not heavy animation), three dots bottom right showing which photo is showing. Photos from Rob needed. A hero preview was built (`sls-hero-preview.html`) but did not render for the developer; decide again when real photos exist.
 - Waiting for reference websites from the developer.
 
+## Accessibility and theme conventions (2026-10-14)
+- Light-only by design: no dark mode. `app/globals.css` sets `color-scheme: light` on `:root`; there is no `prefers-color-scheme` CSS and no `dark:` classes. The Turnstile widget is forced to `theme: "light"`.
+- Skip link: "Skip to content" is the first focusable element on every page (`app/layout.tsx`), hidden until focused, pointing at `<main id="main">`. Every page's `<main>` must keep `id="main"`.
+- Focus ring: site-wide `:focus-visible` in `app/globals.css` (base layer): 2px solid #2563eb, 2px offset (5.17:1 on white, 4.06:1 against the black buttons). Do not remove outlines.
+- Optional form fields are labelled "(optional)" (for example "Company (optional)"); unmarked fields are required. No "(required)" labels.
+- Form success: each form keeps an always-present, empty `<p role="status" aria-live="polite" tabIndex={-1}>`. On success it is filled with the thanks message and receives focus, so the confirmation is announced and focus is not lost when the form is replaced.
+- Contact: opening the quote form moves focus to Name; "Back" returns focus to "Request a Quote". Mobile menu: Escape closes it and returns focus to the button.
+- Hints and error messages sit outside `<label>` and are linked with `aria-describedby`, so a field's accessible name is just its label.
+
 ## Style and voice notes (explicit feedback from the developer)
 - Accuracy first. Check facts or ask before adding details. Never invent specifics (materials, capacity, certifications, client names).
 - Do not add content that wasn't asked for. Make small edits to existing copy, do not rewrite wholesale.
