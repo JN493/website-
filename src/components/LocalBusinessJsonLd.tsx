@@ -1,5 +1,5 @@
 // Structured data for search engines (schema.org LocalBusiness), rendered once in app/layout.tsx.
-// Only verified facts from this repo. Do not add opening hours, coordinates, social links, services,
+// Only verified facts from this repo. Do not add coordinates, social links, services,
 // ratings, price range, email or logo without checking them first.
 // The address is the workshop (where customers go), not the registered office.
 const localBusiness = {
@@ -21,6 +21,13 @@ const localBusiness = {
     addressRegion: "East Sussex",
     postalCode: "BN27 3JF",
     addressCountry: "GB",
+  },
+  // Matches the footer: Mon to Fri, 7:30am to 5:00pm.
+  openingHoursSpecification: {
+    "@type": "OpeningHoursSpecification",
+    dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+    opens: "07:30",
+    closes: "17:00",
   },
 };
 
