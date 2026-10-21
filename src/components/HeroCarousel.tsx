@@ -115,8 +115,19 @@ export default function HeroCarousel() {
         })}
       </div>
 
-      {/* Dark pill so the controls are visible on any photo; .on-dark gives them a white focus ring. */}
+      {/* Dark pill so the controls are visible on any photo; .on-dark gives them a white focus ring.
+          Pause/play sits at the left end at the same 10px scale as the dots (WCAG 2.2.2 needs a pause control). */}
       <div className="on-dark absolute bottom-3 right-3 z-20 flex items-center rounded-full bg-black/60 p-1 text-white">
+        <button
+          type="button"
+          aria-label={playing ? "Pause image rotation" : "Play image rotation"}
+          onClick={() => setUserPlaying(!playing)}
+          className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full"
+        >
+          <svg aria-hidden="true" viewBox="0 0 10 10" width="10" height="10" fill="currentColor">
+            {playing ? <path d="M1.5 0h2.5v10H1.5zM6 0h2.5v10H6z" /> : <path d="M1.5 0l8 5-8 5z" />}
+          </svg>
+        </button>
         {slides.map((slide, i) => (
           <button
             key={slide.name}
@@ -129,16 +140,6 @@ export default function HeroCarousel() {
             <span aria-hidden="true" className={`h-2.5 w-2.5 rounded-full border-2 border-white ${i === index ? "bg-white" : ""}`} />
           </button>
         ))}
-        <button
-          type="button"
-          aria-label={playing ? "Pause image rotation" : "Play image rotation"}
-          onClick={() => setUserPlaying(!playing)}
-          className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full"
-        >
-          <svg aria-hidden="true" viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
-            {playing ? <path d="M3 2h3.5v12H3zM9.5 2H13v12H9.5z" /> : <path d="M4 2l10 6-10 6z" />}
-          </svg>
-        </button>
       </div>
     </div>
   );
