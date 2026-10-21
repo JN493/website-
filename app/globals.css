@@ -67,6 +67,28 @@
   .hero-in, .hero-out { animation: none; }
 }
 
+/* Scroll reveal (src/components/Reveal.tsx). data-reveal is only ever set by JavaScript, so no-JS shows everything.
+   Focus inside a pending element shows it at once; reduced motion and print never hide anything. */
+@media (prefers-reduced-motion: no-preference) {
+  [data-reveal="pending"] {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  [data-reveal="pending"]:focus-within {
+    opacity: 1;
+    transform: none;
+  }
+  [data-reveal="shown"] {
+    transition: opacity 500ms ease-out, transform 500ms ease-out;
+  }
+}
+@media print {
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
 @layer components {
   .container-page {
     @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;

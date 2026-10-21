@@ -6,6 +6,7 @@ import { track } from "@/lib/track";
 import { Honeypot, looksLikeBot, useShownAt } from "@/components/SpamGuard";
 import Turnstile, { TURNSTILE_WAIT_MESSAGE } from "@/components/Turnstile";
 import PageHeader from "@/components/PageHeader";
+import Reveal from "@/components/Reveal";
 
 // Invisible copy of the phone line under the Request a Quote and Join Our Team buttons,
 // so all three buttons line up when the cards sit side by side (lg). Hidden entirely when the cards stack.
@@ -135,7 +136,7 @@ export default function Contact() {
       {!showQuoteForm && (
         <>
           <div className="grid gap-6 lg:grid-cols-3">
-            <section className="card flex flex-col">
+            <Reveal as="section" className="card flex flex-col">
               <h2 className="text-xl font-semibold text-brand mb-2">Request a Quote</h2>
               <p className="text-muted">
                 Ready to partner on your next project? Have drawings or a specification in mind? Send us the details so our team can discuss your requirements and prepare a quote.
@@ -153,9 +154,9 @@ export default function Contact() {
                 </button>
                 {phoneSpacer}
               </div>
-            </section>
+            </Reveal>
 
-            <section className="card flex flex-col">
+            <Reveal as="section" className="card flex flex-col">
               <h2 className="text-xl font-semibold text-brand mb-2">Talk to the Team</h2>
               <p className="text-muted">Not sure what you want, but looking for a solution? Talk to our team.</p>
               <div className="mt-auto pt-6">
@@ -169,9 +170,9 @@ export default function Contact() {
                   Prefer to talk on the phone? Call us on <a href="tel:01323846061" className="text-brand underline underline-offset-2">01323 846061</a>
                 </p>
               </div>
-            </section>
+            </Reveal>
 
-            <section className="card flex flex-col">
+            <Reveal as="section" className="card flex flex-col">
               <h2 className="text-xl font-semibold text-brand mb-2">Join Our Team</h2>
               <p className="text-muted">No current vacancies, but we&apos;d like to hear from you. Send us your CV.</p>
               <div className="mt-auto pt-6">
@@ -180,7 +181,7 @@ export default function Contact() {
                 </Link>
                 {phoneSpacer}
               </div>
-            </section>
+            </Reveal>
           </div>
         </>
       )}

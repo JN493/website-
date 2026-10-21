@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import Reveal from "@/components/Reveal";
 
 export type Tile = {
   title: string;
@@ -34,7 +35,7 @@ export default function TileGrid({ tiles }: { tiles: Tile[] }) {
           </>
         );
         return (
-          <li key={tile.title}>
+          <Reveal as="li" key={tile.title}>
             {tile.href ? (
               <Link
                 href={tile.href}
@@ -45,7 +46,7 @@ export default function TileGrid({ tiles }: { tiles: Tile[] }) {
             ) : (
               <div className="h-full">{content}</div>
             )}
-          </li>
+          </Reveal>
         );
       })}
     </ul>
