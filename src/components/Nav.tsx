@@ -27,17 +27,22 @@ export default function Nav() {
   }, [open]);
 
   return (
-    <header className="flex flex-wrap items-center justify-between px-6 py-4 border-b">
-      <Link href="/" aria-label="SLS Fabrications home" className="font-bold text-xl">SLS</Link>
-      <nav aria-label="Main" className="hidden md:flex gap-6 text-sm">
+    // Sticky; its height is --header-h (globals.css), which scroll-padding-top uses so nothing hides under it.
+    <header className="sticky top-0 z-40 border-b border-line bg-white">
+      <div className="container-page flex h-[var(--header-h)] items-center justify-between">
+      <Link href="/" aria-label="SLS Fabrications home" className="rounded-sm">
+        {/* eslint-disable-next-line @next/next/no-img-element -- static export, images are unoptimised anyway */}
+        <img src="/images/logo/logo-blue.png" srcSet="/images/logo/logo-blue@2x.png 2x" width={102} height={52} alt="" />
+      </Link>
+      <nav aria-label="Main" className="hidden md:flex gap-1 text-[0.9375rem] font-medium">
         {links.map(([href, label]) => (
-          <Link key={href} href={href}>{label}</Link>
+          <Link key={href} href={href} className="rounded-md px-3 py-2 text-ink hover:bg-tint hover:text-brand">{label}</Link>
         ))}
       </nav>
       <button
         type="button"
         ref={buttonRef}
-        className="md:hidden -m-3 flex min-h-11 min-w-11 items-center justify-center text-xl leading-none"
+        className="md:hidden -mr-2 flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-md text-2xl leading-none text-brand"
         aria-label={open ? "Close menu" : "Open menu"}
         aria-expanded={open}
         aria-controls="mobile-menu"
@@ -45,10 +50,11 @@ export default function Nav() {
       >
         <span aria-hidden="true">{open ? "✕" : "☰"}</span>
       </button>
+      </div>
       {open && (
-        <nav id="mobile-menu" aria-label="Main" className="md:hidden basis-full flex flex-col gap-4 pt-4 text-sm">
+        <nav id="mobile-menu" aria-label="Main" className="md:hidden container-page flex flex-col border-t border-line pb-4 pt-2 font-medium">
           {links.map(([href, label]) => (
-            <Link key={href} href={href} onClick={() => setOpen(false)} className="py-2 -my-2">{label}</Link>
+            <Link key={href} href={href} onClick={() => setOpen(false)} className="rounded-md px-2 py-3 text-ink hover:bg-tint hover:text-brand">{label}</Link>
           ))}
         </nav>
       )}

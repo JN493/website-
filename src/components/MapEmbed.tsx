@@ -14,16 +14,16 @@ export default function MapEmbed({ src, title }: { src: string; title: string })
   }, [show]);
 
   if (show) {
-    return <iframe ref={frame} title={title} src={src} className="block w-full h-full" style={{ border: 0 }} loading="lazy"></iframe>;
+    return <iframe ref={frame} title={title} src={src} className="block w-full h-full rounded-lg" style={{ border: 0 }} loading="lazy"></iframe>;
   }
 
   return (
-    <div className="h-full w-full border bg-gray-50 flex flex-col items-center justify-center gap-3 px-4 text-center">
-      <button type="button" onClick={() => setShow(true)} className="border bg-white px-6 py-3 font-semibold text-gray-900">
+    <div className="on-light h-full w-full rounded-lg border border-line bg-tint text-muted flex flex-col items-center justify-center gap-3 px-4 text-center">
+      <button type="button" onClick={() => setShow(true)} className="btn btn-secondary">
         Show map
       </button>
       <p>
-        Loads a map from Google. See our <Link href="/cookies" className="underline">Cookie Policy</Link>.
+        Loads a map from Google. See our <Link href="/cookies" className="text-brand underline underline-offset-2">Cookie Policy</Link>.
       </p>
     </div>
   );

@@ -9,7 +9,7 @@ declare global {
 // Reopens the Cookiebot consent dialog (Cookiebot.renew()). Does nothing if the Cookiebot script failed to load.
 export default function CookieSettingsButton() {
   return (
-    <button type="button" onClick={() => window.Cookiebot?.renew?.()} className="py-2 -my-2 cursor-pointer">
+    <button type="button" onClick={() => window.Cookiebot?.renew?.()} className="py-2 -my-2 cursor-pointer hover:text-white hover:underline">
       Cookie settings
     </button>
   );

@@ -11,10 +11,14 @@ const mapSize = { "--map-w": "280px", "--map-h": "180px" } as React.CSSPropertie
 
 export default function Footer() {
   return (
-    <footer className="border-t px-6 py-10 text-sm text-gray-600 mt-20" style={mapSize}>
+    // Dark blue: .on-dark gives a white focus ring (globals.css). Secondary text is white at 80% (7.47:1).
+    <footer className="on-dark mt-24 bg-brand text-sm text-white/80" style={mapSize}>
+      <div className="container-page py-12">
+      {/* eslint-disable-next-line @next/next/no-img-element -- static export, images are unoptimised anyway */}
+      <img src="/images/logo/logo-white.png" srcSet="/images/logo/logo-white@2x.png 2x" width={102} height={52} alt="" className="mb-10" />
       <div className="grid gap-8 sm:grid-cols-3 lg:grid-cols-[1fr_1fr_1fr_var(--map-w)]">
         <div>
-          <h2 className="font-semibold text-gray-900 mb-2">Find Us</h2>
+          <h2 className="mb-3 text-base font-semibold text-white">Find Us</h2>
           <address className="not-italic">
             SLS Fabrications<br />
             Unit 2 Hythe Works, Diplocks Way<br />
@@ -25,17 +29,17 @@ export default function Footer() {
             href={`https://www.google.com/maps/search/?api=1&query=${mapsQuery}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block py-2 -mb-2 underline"
+            className="mt-1 inline-block py-2 -mb-2 text-white underline underline-offset-4 hover:no-underline"
           >
             Get directions<span className="sr-only"> (opens in a new tab)</span>
           </a>
         </div>
         <div>
-          <h2 className="font-semibold text-gray-900 mb-2">Call Us</h2>
-          <a href="tel:+441323846061" className="inline-block py-2 -my-2 underline">01323 846061</a>
+          <h2 className="mb-3 text-base font-semibold text-white">Call Us</h2>
+          <a href="tel:+441323846061" className="inline-block py-2 -my-2 text-white underline underline-offset-4 hover:no-underline">01323 846061</a>
         </div>
         <div>
-          <h2 className="font-semibold text-gray-900 mb-2">Opening Hours</h2>
+          <h2 className="mb-3 text-base font-semibold text-white">Opening Hours</h2>
           <p>Mon–Fri: 7:30am – 5:00pm</p>
         </div>
         <div className="h-[var(--map-h)] w-full max-w-[400px] sm:col-span-3 lg:col-span-1 lg:max-w-none">
@@ -45,13 +49,14 @@ export default function Footer() {
           />
         </div>
       </div>
-      <div className="flex flex-wrap gap-4 mt-8">
-        <Link href="/privacy" className="py-2 -my-2">Privacy Policy</Link>
-        <Link href="/terms" className="py-2 -my-2">Terms of Use</Link>
-        <Link href="/cookies" className="py-2 -my-2">Cookie Policy</Link>
+      <div className="mt-12 flex flex-wrap gap-x-6 gap-y-4 border-t border-white/20 pt-6">
+        <Link href="/privacy" className="py-2 -my-2 hover:text-white hover:underline">Privacy Policy</Link>
+        <Link href="/terms" className="py-2 -my-2 hover:text-white hover:underline">Terms of Use</Link>
+        <Link href="/cookies" className="py-2 -my-2 hover:text-white hover:underline">Cookie Policy</Link>
         <CookieSettingsButton />
       </div>
       <p className="mt-4">&copy; 2026 SLS Fabrications</p>
+      </div>
     </footer>
   );
 }
