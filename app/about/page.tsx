@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import PageHeader from "@/components/PageHeader";
 
 export const metadata: Metadata = {
   title: "About SLS Fabrications | Hailsham, East Sussex",
@@ -7,5 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default function About() {
-  return <main id="main" className="p-6"><h1 className="text-3xl font-bold">About</h1></main>;
+  return (
+    <main id="main">
+      <PageHeader title="About" />
+    </main>
+  );
 }

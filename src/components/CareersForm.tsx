@@ -74,26 +74,26 @@ export default function CareersForm() {
   return (
     <>
       {/* Always on the page (empty until success) so screen readers announce the thanks message. */}
-      <p ref={statusRef} role="status" aria-live="polite" tabIndex={-1}>
+      <p ref={statusRef} role="status" aria-live="polite" tabIndex={-1} className="rounded-lg border border-line bg-tint p-4 font-medium text-ink empty:border-0 empty:p-0">
         {status === "sent" ? "Thanks, we've received your CV." : ""}
       </p>
       {status !== "sent" && (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
       <Honeypot />
 
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium">Name</span>
-        <input name="name" type="text" required maxLength={200} autoComplete="name" className="border px-3 py-2" />
+        <span className="field-label">Name</span>
+        <input name="name" type="text" required maxLength={200} autoComplete="name" className="field" />
       </label>
 
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium">Email</span>
-        <input name="email" type="email" required maxLength={200} autoComplete="email" className="border px-3 py-2" />
+        <span className="field-label">Email</span>
+        <input name="email" type="email" required maxLength={200} autoComplete="email" className="field" />
       </label>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="cv-file" className="text-sm font-medium">
-          CV <span className="font-normal text-gray-500">(PDF or Word, max 5 MB)</span>
+        <label htmlFor="cv-file" className="field-label">
+          CV <span className="font-normal text-muted">(PDF or Word, max 5 MB)</span>
         </label>
         <input
           id="cv-file"
@@ -104,16 +104,16 @@ export default function CareersForm() {
           onChange={() => setCvError("")}
           aria-invalid={cvError ? true : undefined}
           aria-describedby={cvError ? "cv-error" : undefined}
-          className="border px-3 py-2"
+          className="field"
         />
         {cvError && <span id="cv-error" role="alert" className="text-sm text-red-700">{cvError}</span>}
       </div>
 
       <label className="flex items-start gap-2 text-sm">
-        <input type="checkbox" required className="mt-1" />
+        <input type="checkbox" required className="mt-0.5 h-5 w-5 shrink-0 accent-brand" />
         <span>
           I agree to SLS Fabrications storing my details and CV to consider me for roles, as set out in the{" "}
-          <Link href="/privacy" className="underline">Privacy Policy</Link>.
+          <Link href="/privacy" className="text-brand underline underline-offset-2">Privacy Policy</Link>.
         </span>
       </label>
 
@@ -122,7 +122,7 @@ export default function CareersForm() {
       <button
         type="submit"
         disabled={status === "sending"}
-        className="bg-black text-white px-6 py-3 font-semibold self-start disabled:opacity-50"
+        className="btn btn-primary self-start"
       >
         {status === "sending" ? "Sending..." : "Submit"}
       </button>

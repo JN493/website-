@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import CareersForm from "@/components/CareersForm";
+import PageHeader from "@/components/PageHeader";
 
 export const metadata: Metadata = {
   title: "Careers | SLS Fabrications, Hailsham",
@@ -9,12 +10,17 @@ export const metadata: Metadata = {
 
 export default function Careers() {
   return (
-    <main id="main" className="p-6 max-w-2xl mx-auto w-full">
-      <h1 className="text-3xl font-bold mb-6">Join Our Team</h1>
-      <p className="text-gray-600 mb-6">
+    <main id="main">
+      <PageHeader title="Join Our Team">
+        <p>
         We currently don&apos;t have any specific job openings, but if you feel you can make a difference, please submit your CV and we&apos;ll be in touch if a suitable role comes up.
-      </p>
-      <CareersForm />
+        </p>
+      </PageHeader>
+      <div className="container-page py-12 sm:py-16">
+        <div className="card max-w-2xl">
+          <CareersForm />
+        </div>
+      </div>
     </main>
   );
 }

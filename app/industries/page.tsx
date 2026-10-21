@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import TileGrid from "@/components/TileGrid";
+import PageHeader from "@/components/PageHeader";
 
 export const metadata: Metadata = {
   title: "Industries We Serve | SLS Fabrications, Hailsham",
@@ -24,9 +25,11 @@ const industries = [
 
 export default function Industries() {
   return (
-    <main id="main" className="p-6 max-w-6xl mx-auto w-full">
-      <h1 className="text-3xl font-bold mb-6">Industries</h1>
+    <main id="main">
+      <PageHeader title="Industries" />
+      <div className="container-page py-12 sm:py-16">
       <TileGrid tiles={industries.map((title) => ({ title }))} />
+      </div>
     </main>
   );
 }

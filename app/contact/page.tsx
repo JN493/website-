@@ -5,6 +5,7 @@ import { submitForm } from "@/lib/submitForm";
 import { track } from "@/lib/track";
 import { Honeypot, looksLikeBot, useShownAt } from "@/components/SpamGuard";
 import Turnstile, { TURNSTILE_WAIT_MESSAGE } from "@/components/Turnstile";
+import PageHeader from "@/components/PageHeader";
 
 // Invisible copy of the phone line under the Request a Quote and Join Our Team buttons,
 // so all three buttons line up at desktop width. Hidden entirely on phones, where cards stack.
@@ -114,11 +115,18 @@ export default function Contact() {
   }
 
   return (
-    <main id="main" className={`p-6 mx-auto w-full ${showQuoteForm ? "max-w-2xl" : "max-w-6xl"}`}>
-      <h1 className="text-3xl font-bold mb-6">{showQuoteForm ? "Request a Quote" : "Contact"}</h1>
+    <main id="main">
+      <PageHeader title={showQuoteForm ? "Request a Quote" : "Contact"}>
+        {!showQuoteForm && (
+          <p>
+            Have a project ready to quote, need help finding the right solution, or want to join us? Choose the option that fits.
+          </p>
+        )}
+      </PageHeader>
 
+      <div className="container-page py-12 sm:py-16">
       {/* Always on the page (empty until success) so screen readers announce the thanks message. */}
-      <p ref={statusRef} role="status" aria-live="polite" tabIndex={-1}>
+      <p ref={statusRef} role="status" aria-live="polite" tabIndex={-1} className="max-w-2xl rounded-lg border border-line bg-tint p-4 font-medium text-ink empty:border-0 empty:p-0">
         {showQuoteForm && status === "sent"
           ? "Thanks, we've received your request and will be in touch soon to discuss the details further and arrange a meeting if needed."
           : ""}
@@ -126,13 +134,10 @@ export default function Contact() {
 
       {!showQuoteForm && (
         <>
-          <p className="text-gray-600 mb-8">
-            Have a project ready to quote, need help finding the right solution, or want to join us? Choose the option that fits.
-          </p>
           <div className="grid gap-6 md:grid-cols-3">
-            <section className="border p-6 flex flex-col">
-              <h2 className="text-xl font-semibold mb-2">Request a Quote</h2>
-              <p className="text-gray-600 text-sm">
+            <section className="card flex flex-col">
+              <h2 className="text-xl font-semibold text-brand mb-2">Request a Quote</h2>
+              <p className="text-muted">
                 Ready to partner on your next project? Have drawings or a specification in mind? Send us the details so our team can discuss your requirements and prepare a quote.
               </p>
               <div className="mt-auto pt-6">
@@ -142,7 +147,7 @@ export default function Contact() {
                     focusAfterToggle.current = "name";
                     setShowQuoteForm(true);
                   }}
-                  className="bg-black text-white px-6 py-3 font-semibold"
+                  className="btn btn-primary"
                 >
                   Request a Quote
                 </button>
@@ -150,27 +155,27 @@ export default function Contact() {
               </div>
             </section>
 
-            <section className="border p-6 flex flex-col">
-              <h2 className="text-xl font-semibold mb-2">Talk to the Team</h2>
-              <p className="text-gray-600 text-sm">Not sure what you want, but looking for a solution? Talk to our team.</p>
+            <section className="card flex flex-col">
+              <h2 className="text-xl font-semibold text-brand mb-2">Talk to the Team</h2>
+              <p className="text-muted">Not sure what you want, but looking for a solution? Talk to our team.</p>
               <div className="mt-auto pt-6">
                 <a
                   href="mailto:info@slsfabrications.com"
-                  className="border px-6 py-3 font-semibold inline-block"
+                  className="btn btn-secondary"
                 >
                   Talk to our team
                 </a>
-                <p className="text-gray-600 text-sm mt-4">
-                  Prefer to talk on the phone? Call us on <a href="tel:01323846061" className="underline">01323 846061</a>
+                <p className="text-muted text-sm mt-4">
+                  Prefer to talk on the phone? Call us on <a href="tel:01323846061" className="text-brand underline underline-offset-2">01323 846061</a>
                 </p>
               </div>
             </section>
 
-            <section className="border p-6 flex flex-col">
-              <h2 className="text-xl font-semibold mb-2">Join Our Team</h2>
-              <p className="text-gray-600 text-sm">No current vacancies, but we&apos;d like to hear from you. Send us your CV.</p>
+            <section className="card flex flex-col">
+              <h2 className="text-xl font-semibold text-brand mb-2">Join Our Team</h2>
+              <p className="text-muted">No current vacancies, but we&apos;d like to hear from you. Send us your CV.</p>
               <div className="mt-auto pt-6">
-                <Link href="/careers" className="border px-6 py-3 font-semibold inline-block">
+                <Link href="/careers" className="btn btn-secondary">
                   Join Our Team
                 </Link>
                 {phoneSpacer}
@@ -181,7 +186,7 @@ export default function Contact() {
       )}
 
       {showQuoteForm && status !== "sent" && (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="card flex max-w-2xl flex-col gap-5">
           <button
             type="button"
             onClick={() => {
@@ -189,7 +194,7 @@ export default function Contact() {
               setShowQuoteForm(false);
               setFileProblems({ tooMany: false, tooBig: false }); // the file input is emptied when the form closes
             }}
-            className="text-sm text-gray-500 text-left"
+            className="-my-2 cursor-pointer self-start py-2 text-sm font-medium text-brand hover:underline"
           >
             ← Back
           </button>
@@ -197,43 +202,43 @@ export default function Contact() {
           <Honeypot />
 
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium">Name</span>
-            <input ref={nameRef} name="name" type="text" required maxLength={200} className="border px-3 py-2" />
+            <span className="field-label">Name</span>
+            <input ref={nameRef} name="name" type="text" required maxLength={200} className="field" />
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium">Company (optional)</span>
-            <input name="company" type="text" maxLength={200} className="border px-3 py-2" />
+            <span className="field-label">Company (optional)</span>
+            <input name="company" type="text" maxLength={200} className="field" />
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium">Phone</span>
-            <input name="phone" type="tel" required maxLength={50} className="border px-3 py-2" />
+            <span className="field-label">Phone</span>
+            <input name="phone" type="tel" required maxLength={50} className="field" />
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium">Email</span>
-            <input name="email" type="email" required maxLength={200} className="border px-3 py-2" />
+            <span className="field-label">Email</span>
+            <input name="email" type="email" required maxLength={200} className="field" />
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium">Project details (optional)</span>
-            <textarea name="project_details" rows={4} maxLength={5000} className="border px-3 py-2"></textarea>
+            <span className="field-label">Project details (optional)</span>
+            <textarea name="project_details" rows={4} maxLength={5000} className="field"></textarea>
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium">Describe what you&apos;re submitting (optional)</span>
+            <span className="field-label">Describe what you&apos;re submitting (optional)</span>
             <textarea
               name="submission_description"
               rows={2}
               maxLength={1000}
               placeholder="e.g. 3 drawings for a steel bracket, revision 2"
-              className="border px-3 py-2 placeholder:text-gray-600"
+              className="field placeholder:text-muted"
             ></textarea>
           </label>
 
           <div className="flex flex-col gap-1">
-            <label htmlFor="quote-files" className="text-sm font-medium">Upload drawings / files (optional)</label>
+            <label htmlFor="quote-files" className="field-label">Upload drawings / files (optional)</label>
             <input
               id="quote-files"
               name="files"
@@ -242,9 +247,9 @@ export default function Contact() {
               onChange={(e) => setFileProblems(checkQuoteFiles(Array.from(e.currentTarget.files ?? [])))}
               aria-invalid={fileProblems.tooMany || fileProblems.tooBig ? true : undefined}
               aria-describedby={["files-hint", fileProblems.tooMany && "files-too-many", fileProblems.tooBig && "files-too-big"].filter(Boolean).join(" ")}
-              className="border px-3 py-2"
+              className="field"
             />
-            <span id="files-hint" className="text-sm text-gray-500">You can attach up to 10 files, 20 MB each.</span>
+            <span id="files-hint" className="text-sm text-muted">You can attach up to 10 files, 20 MB each.</span>
             {fileProblems.tooMany && (
               <span id="files-too-many" role="alert" className="text-sm text-red-700">Please attach no more than 10 files.</span>
             )}
@@ -259,7 +264,7 @@ export default function Contact() {
               required
               checked={consent}
               onChange={(e) => setConsent(e.target.checked)}
-              className="mt-1"
+              className="mt-0.5 h-5 w-5 shrink-0 accent-brand"
             />
             <span>I agree to be contacted about this enquiry and understand my details will be handled in line with the Privacy Policy.</span>
           </label>
@@ -269,7 +274,7 @@ export default function Contact() {
           <button
             type="submit"
             disabled={status === "sending"}
-            className="bg-black text-white px-6 py-3 font-semibold disabled:opacity-50"
+            className="btn btn-primary self-start"
           >
             {status === "sending" ? "Sending..." : "Submit"}
           </button>
@@ -281,6 +286,7 @@ export default function Contact() {
           )}
         </form>
       )}
+      </div>
     </main>
   );
 }

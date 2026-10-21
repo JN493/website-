@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import TileGrid from "@/components/TileGrid";
+import PageHeader from "@/components/PageHeader";
 import { capabilities } from "@/lib/capabilities";
 
 export const metadata: Metadata = {
@@ -10,8 +11,9 @@ export const metadata: Metadata = {
 
 export default function Capabilities() {
   return (
-    <main id="main" className="p-6 max-w-6xl mx-auto w-full">
-      <h1 className="text-3xl font-bold mb-6">Capabilities</h1>
+    <main id="main">
+      <PageHeader title="Capabilities" />
+      <div className="container-page py-12 sm:py-16">
       <TileGrid
         tiles={capabilities.map((c) => ({
           title: c.title,
@@ -20,6 +22,7 @@ export default function Capabilities() {
           href: c.ready ? `/capabilities/${c.slug}` : undefined,
         }))}
       />
+      </div>
     </main>
   );
 }

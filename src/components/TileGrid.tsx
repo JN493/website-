@@ -12,7 +12,7 @@ export type Tile = {
 // Plain rgba gradient (not Tailwind's gradient utilities) so it renders on older iOS Safari.
 export function ImageBox({ title, image }: { title?: string; image?: string }) {
   return (
-    <div className="relative aspect-[4/3] overflow-hidden bg-slate-600">
+    <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-steel">
       {image && <Image src={image} alt="" fill sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" className="object-cover" />}
       {title && (
         <div className="absolute inset-x-0 bottom-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.7),rgba(0,0,0,0))] px-4 pb-3 pt-12">
@@ -25,12 +25,12 @@ export function ImageBox({ title, image }: { title?: string; image?: string }) {
 
 export default function TileGrid({ tiles }: { tiles: Tile[] }) {
   return (
-    <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <ul className="grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
       {tiles.map((tile) => {
         const content = (
           <>
             <ImageBox title={tile.title} image={tile.image} />
-            {tile.description && <p className="text-gray-600 text-sm mt-3">{tile.description}</p>}
+            {tile.description && <p className="mt-4 text-muted">{tile.description}</p>}
           </>
         );
         return (
@@ -38,7 +38,7 @@ export default function TileGrid({ tiles }: { tiles: Tile[] }) {
             {tile.href ? (
               <Link
                 href={tile.href}
-                className="block h-full transition-opacity hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black"
+                className="block h-full rounded-lg transition-opacity hover:opacity-85"
               >
                 {content}
               </Link>

@@ -115,13 +115,20 @@ Five pages: **About, Capabilities, Industries, Projects, Contact** (no "Our" pre
 ## Design direction
 - Rejected: dark, heavy industrial theme.
 - Target: clean, premium, light, like a high-end engineering firm.
-- Homepage hero: three photos, subtle motion (parallax or slow zoom, not heavy animation), three dots bottom right showing which photo is showing. Photos from Rob needed. A hero preview was built (`sls-hero-preview.html`) but did not render for the developer; decide again when real photos exist.
-- Waiting for reference websites from the developer.
+- Redesign built 2026-10-21 (contemporary, white space, modest rounded corners like the logo). Home: "SLS Fabrications" h1 and the tagline "Sheet metal and welding specialists, bespoke service & designs from small to large scale projects." (also the home meta description), then `src/components/HeroCarousel.tsx`: team, welding, laser (TEST IMAGES, see Launch blockers); right to left including the wrap, 6s per slide, 600ms (keyframes `hero-in`/`hero-out` in `app/globals.css`); dots and pause/play on a dark pill bottom right; pauses on hover and focus; reduced motion starts paused with no animation. Hero images: `public/images/hero/<name>-<width>.webp` (640/1280/1920, never upscaled).
+
+## Design system (2026-10-21)
+- Tokens in `app/globals.css` `@theme`: brand #004167, brand-dark #002f4b (hover), tint #eef4f8, tint-2 #dde9f1, ink #14212b (text), muted #4a5c69 (secondary text), line #d4dfe7 (decorative borders), field #6b7f8e (form control borders), steel #2d4a5e (image placeholder). Contrast checked: ink 16.38:1 on white / 14.76:1 on tint; muted 6.94 / 6.26; brand 10.76 / 9.70; white on brand 10.76; footer text (white 80%) on brand 7.47; field border 4.16; error red 6.47 / 5.83.
+- Font: Inter via `next/font/google` (self-hosted at build, `font-src 'self'`). No requests to Google font hosts.
+- Shared classes (`@layer components`): `container-page`, `btn` + `btn-primary` (solid brand) / `btn-secondary` (brand outline), `field`, `field-label`, `card`. `src/components/PageHeader.tsx` is the tinted title band on every page except home.
+- Logo: `public/images/logo/logo-blue(@2x).png` (header) and `logo-white(@2x).png` (footer), 102x52 display, made from `design-assets/logo-black.png`. `app/icon.png` unchanged.
+- Header is sticky (height `--header-h`, 4.5rem); `html { scroll-padding-top }` keeps anchors and focused elements clear of it. Footer is brand blue with white text.
+- `design-assets/` (not in `public/`) holds the source logo and photos plus `SOURCES.md` credits.
 
 ## Accessibility and theme conventions (2026-10-14)
 - Light-only by design: no dark mode. `app/globals.css` sets `color-scheme: light` on `:root`; there is no `prefers-color-scheme` CSS and no `dark:` classes. The Turnstile widget is forced to `theme: "light"`.
 - Skip link: "Skip to content" is the first focusable element on every page (`app/layout.tsx`), hidden until focused, pointing at `<main id="main">`. Every page's `<main>` must keep `id="main"`.
-- Focus ring: site-wide `:focus-visible` in `app/globals.css` (base layer): 2px solid #2563eb, 2px offset (5.17:1 on white, 4.06:1 against the black buttons). Do not remove outlines.
+- Focus ring: site-wide `:focus-visible` in `app/globals.css` (base layer): 2px solid #2563eb, 2px offset (5.17:1 on white, 4.66:1 on the tint). On dark blue it is only 2.08:1, so areas with class `on-dark` (footer, carousel controls) use a white ring; `on-light` inside them switches back (footer map placeholder). Do not remove outlines.
 - Optional form fields are labelled "(optional)" (for example "Company (optional)"); unmarked fields are required. No "(required)" labels.
 - Form success: each form keeps an always-present, empty `<p role="status" aria-live="polite" tabIndex={-1}>`. On success it is filled with the thanks message and receives focus, so the confirmation is announced and focus is not lost when the form is replaced.
 - Contact: opening the quote form moves focus to Name; "Back" returns focus to "Request a Quote". Mobile menu: Escape closes it and returns focus to the button.
