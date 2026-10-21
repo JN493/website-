@@ -7,7 +7,11 @@
 # style-src needs 'unsafe-inline' for inline style attributes (for example the footer map size).
 # Origins allowed: Cloudflare Turnstile (challenges.cloudflare.com), Supabase (submit-form function and signed file uploads),
 # Google Maps embed (www.google.com, only after "Show map" is clicked).
-# Before adding Google Tag Manager, Google Analytics, Cookiebot or any other third-party service, add its origins here first,
+# Google Tag Manager + Google Analytics (no Ads features): origins from https://developers.google.com/tag-platform/security/guides/csp
+# (www.googletagmanager.com, *.google-analytics.com, *.google.com).
+# Cookiebot: origins from https://support.cookiebot.com/hc/en-us/articles/360018907220 (consent.cookiebot.com, consentcdn.cookiebot.com,
+# imgsct.cookiebot.com), checked against the real requests (uc.js and cc.js from consent.cookiebot.com).
+# Before adding any other third-party service (or GTM tags that load from other origins, such as Google Ads), add its origins here first,
 # otherwise this policy will block it.
 # Strict-Transport-Security is NOT set here: HSTS is set in the Cloudflare dashboard at go-live.
 /*
@@ -15,7 +19,7 @@
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://mvivwqyrtarryoomezgp.supabase.co https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://www.googletagmanager.com https://consent.cookiebot.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://www.googletagmanager.com https://*.google-analytics.com https://imgsct.cookiebot.com; font-src 'self'; connect-src 'self' https://mvivwqyrtarryoomezgp.supabase.co https://challenges.cloudflare.com https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://consentcdn.cookiebot.com https://consent.cookiebot.com; frame-src https://challenges.cloudflare.com https://www.google.com https://consentcdn.cookiebot.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
 
 # Content-hashed build files (names change on every build), safe to cache for a year.
 /_next/static/*

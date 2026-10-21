@@ -1,5 +1,6 @@
 import Link from "next/link";
 import MapEmbed from "@/components/MapEmbed";
+import CookieSettingsButton from "@/components/CookieSettingsButton";
 
 const address = "Unit 2 Hythe Works, Diplocks Way, Hailsham BN27 3JF, United Kingdom";
 const mapsQuery = encodeURIComponent(address);
@@ -44,10 +45,11 @@ export default function Footer() {
           />
         </div>
       </div>
-      <div className="flex gap-4 mt-8">
+      <div className="flex flex-wrap gap-4 mt-8">
         <Link href="/privacy" className="py-2 -my-2">Privacy Policy</Link>
         <Link href="/terms" className="py-2 -my-2">Terms of Use</Link>
         <Link href="/cookies" className="py-2 -my-2">Cookie Policy</Link>
+        <CookieSettingsButton />
       </div>
       <p className="mt-4">&copy; 2026 SLS Fabrications</p>
     </footer>

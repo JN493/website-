@@ -1,5 +1,4 @@
-// Pushes a named event onto window.dataLayer, ready for a tag manager later.
-// No tag manager is installed, so for now these are harmless array items.
+// Pushes a named event onto window.dataLayer, which Google Tag Manager (GTM-M995FM9J, loaded in app/layout.tsx) reads.
 // Event name only: never put personal data (names, emails, phone numbers, messages, file names) in here.
 
 declare global {
