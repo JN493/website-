@@ -151,6 +151,9 @@ Five pages: **About, Capabilities, Industries, Projects, Contact** (no "Our" pre
 - Test on a real phone when possible (an iPhone 7 Plus caught a bug that simulated testing missed).
 - Past issue (resolved): duplicate `app` folders (`src/app/` and root `app/`) broke routing. All pages live in the root `app/`. Shared components are in `src/components/`.
 
+## Launch blockers
+- Home hero uses TEST IMAGES (marked "TEST IMAGE: replace before launch" in `src/components/HeroCarousel.tsx`; credits in `design-assets/SOURCES.md`). The team photo (Bhupathi Srinu) and the laser photo (Clayton Cardinalli) are Unsplash test images, and the team photo is NOT SLS staff. The welding photo is SLS's own but only 382x510; a full-size original is needed.
+
 ## Open items
 - Rob: Microsoft admin login, ICO registration, mission statement, workshop photos, sector name wording, permission to name any clients, brochure PDF.
 - Rachael: analytics decision (Google Analytics with banner, or Plausible). Asked 2026-10-08. Key deciding question put to her: is paid advertising (Google Ads) planned? Also proposed an optional "How did you hear about us?" field on the quote form (not yet agreed), plus Google Search Console and Google Business Profile.
