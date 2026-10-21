@@ -20,7 +20,7 @@ export default function Privacy() {
         This policy explains what personal data SLS Fabrications Limited collects through this website, why we collect it, how long we keep it and what your rights are. It follows UK data protection law (UK GDPR and the Data Protection Act 2018).
       </p>
 
-      <h2 className="mt-10 mb-3 text-xl font-semibold text-brand">Who we are</h2>
+      <h2 className="accent-line mt-10 mb-3 text-xl font-semibold text-brand">Who we are</h2>
       <p className="mb-4">SLS Fabrications Limited (company number 03187824) is the controller of your personal data.</p>
       <p className="mb-4">
         Registered office: 30-34 North Street, Hailsham, East Sussex, BN27 1DW.
@@ -33,7 +33,7 @@ export default function Privacy() {
       </p>
       <p className="mb-4">ICO registration number: [add once registered]</p>
 
-      <h2 className="mt-10 mb-3 text-xl font-semibold text-brand">What we collect and why</h2>
+      <h2 className="accent-line mt-10 mb-3 text-xl font-semibold text-brand">What we collect and why</h2>
       <p className="mb-4">
         <strong>Quote requests.</strong> If you ask for a quote we collect your name, phone number and email address. You can also give us your company name, project details, a description of what you are sending and any files you attach. We use this to respond to your request and prepare a quote. We keep it for 12 months after we last had contact with you, then delete it. Records of work we carry out and financial records are kept separately for as long as the law requires.
       </p>
@@ -54,7 +54,7 @@ export default function Privacy() {
         We do not use analytics or advertising tools on this website at the moment. If we add them, we will update this policy and our Cookie Policy first.
       </p>
 
-      <h2 className="mt-10 mb-3 text-xl font-semibold text-brand">Who we share it with</h2>
+      <h2 className="accent-line mt-10 mb-3 text-xl font-semibold text-brand">Who we share it with</h2>
       <p className="mb-4">
         We do not sell your personal data. We use these services to run the website, and they handle data on our behalf:
       </p>
@@ -66,12 +66,12 @@ export default function Privacy() {
       </ul>
       <p className="mb-4">We may also share data if the law requires it.</p>
 
-      <h2 className="mt-10 mb-3 text-xl font-semibold text-brand">Where your data goes</h2>
+      <h2 className="accent-line mt-10 mb-3 text-xl font-semibold text-brand">Where your data goes</h2>
       <p className="mb-4">
         Our database and stored files are held in the UK (London). Some of the other services we use, including Cloudflare and Google, are run by companies based in the United States and may handle your data outside the UK. They explain how they protect transferred data in their own privacy policies.
       </p>
 
-      <h2 className="mt-10 mb-3 text-xl font-semibold text-brand">Your rights</h2>
+      <h2 className="accent-line mt-10 mb-3 text-xl font-semibold text-brand">Your rights</h2>
       <p className="mb-4">You can ask us to:</p>
       <ul className="list-disc pl-5 mb-4">
         <li>see the personal data we hold about you</li>
@@ -86,7 +86,7 @@ export default function Privacy() {
         If you are unhappy with how we handle your data, you can complain to the Information Commissioner&apos;s Office at ico.org.uk/make-a-complaint. We would appreciate the chance to put things right first.
       </p>
 
-      <h2 className="mt-10 mb-3 text-xl font-semibold text-brand">Changes</h2>
+      <h2 className="accent-line mt-10 mb-3 text-xl font-semibold text-brand">Changes</h2>
       <p className="mb-4">We may update this policy. The date at the top shows when it last changed.</p>
       </div>
       </div>

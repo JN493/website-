@@ -89,6 +89,20 @@
     @apply text-sm font-medium text-ink;
   }
 
+  /* Short brand accent under page-header h1s and section h2s on light backgrounds. Opt-in: never on card
+     headings, the home hero title, the footer or other dark areas. Follows the heading's alignment. */
+  .accent-line::after {
+    content: "";
+    display: block;
+    width: 48px;
+    height: 3px;
+    margin-top: 0.75rem;
+    background: var(--color-brand);
+  }
+  .accent-line.text-center::after {
+    margin-inline: auto;
+  }
+
   .card {
     @apply rounded-lg border border-line bg-white p-6 sm:p-8;
   }

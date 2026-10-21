@@ -122,6 +122,7 @@ Five pages: **About, Capabilities, Industries, Projects, Contact** (no "Our" pre
 - Font: Inter via `next/font/google` (self-hosted at build, `font-src 'self'`). No requests to Google font hosts.
 - Shared classes (`@layer components`): `container-page`, `btn` + `btn-primary` (solid brand) / `btn-secondary` (brand outline), `field`, `field-label`, `card`. `src/components/PageHeader.tsx` is the tinted title band on every page except home.
 - Logo: `public/images/logo/logo-blue(@2x).png` (header) and `logo-white(@2x).png` (footer), 102x52 display, made from `design-assets/logo-black.png`. `app/icon.png` unchanged.
+- Accent line: class `accent-line` (`app/globals.css`) draws a 48x3px brand-blue line 0.75rem under a heading with `::after` (no extra elements, follows `text-center`). Used on the PageHeader h1 and the section h2s of the legal pages. Opt-in only: never on card headings (Contact cards, Projects card, tiles), the home hero title, the footer or any dark area.
 - Header is sticky (height `--header-h`, 4.5rem); `html { scroll-padding-top }` keeps anchors and focused elements clear of it. Footer is brand blue with white text.
 - `design-assets/` (not in `public/`) holds the source logo and photos plus `SOURCES.md` credits.
 

@@ -3,7 +3,7 @@ export default function PageHeader({ title, children }: { title: string; childre
   return (
     <div className="bg-tint">
       <div className="container-page py-12 sm:py-16">
-        <h1 className="text-3xl font-bold tracking-tight text-brand sm:text-4xl">{title}</h1>
+        <h1 className="accent-line text-3xl font-bold tracking-tight text-brand sm:text-4xl">{title}</h1>
         {children && <div className="mt-4 max-w-3xl text-lg text-muted">{children}</div>}
       </div>
     </div>
