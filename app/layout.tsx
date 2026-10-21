@@ -1,18 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import SiteTracking from "@/components/SiteTracking";
 import LocalBusinessJsonLd from "@/components/LocalBusinessJsonLd";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+// Self-hosted: next/font downloads Inter at build time and serves it from /_next/static (font-src 'self').
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
@@ -50,7 +46,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en-GB"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${inter.variable} h-full antialiased`}
     >
       {/* Order matters (Cookiebot, "Google Tag Manager and Automatic cookie blocking"): Consent Mode defaults,
           then Tag Manager, then Cookiebot. Cookiebot is in manual mode (no data-blockingmode="auto"). */}

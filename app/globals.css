@@ -4,26 +4,76 @@
 :root {
   color-scheme: light;
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #14212b;
+  /* Height of the sticky header, so anchors and focused elements are never hidden under it. */
+  --header-h: 4.5rem;
 }
 
+/* Design tokens. Contrast (WCAG AA) checked for every pair used; see CLAUDE.md "Design system". */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-brand: #004167;
+  --color-brand-dark: #002f4b; /* hover on brand buttons */
+  --color-tint: #eef4f8; /* light section background */
+  --color-tint-2: #dde9f1; /* stronger tint, e.g. card hover */
+  --color-ink: #14212b; /* body text */
+  --color-muted: #4a5c69; /* secondary text, 6.26:1 even on tint */
+  --color-line: #d4dfe7; /* decorative borders and dividers */
+  --color-field: #6b7f8e; /* form control borders, 4.16:1 on white */
+  --color-steel: #2d4a5e; /* image placeholder */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
 @layer base {
-  /* Visible keyboard focus everywhere. #2563eb has at least 3:1 contrast against the white page and the black buttons. */
+  html {
+    scroll-padding-top: calc(var(--header-h) + 1rem);
+  }
+
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+  }
+
+  /* Visible keyboard focus everywhere. #2563eb: 5.17:1 on white, 4.66:1 on the tint. */
   :focus-visible {
     outline: 2px solid #2563eb;
     outline-offset: 2px;
   }
+
+  /* On dark blue areas the blue ring is only 2.08:1, so use white (10.76:1). .on-light switches back inside them. */
+  .on-dark :focus-visible {
+    outline-color: #ffffff;
+  }
+  .on-dark .on-light :focus-visible {
+    outline-color: #2563eb;
+  }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
+  }
+
+  .btn {
+    @apply inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-md px-5 py-2.5 text-center font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-primary {
+    @apply bg-brand text-white hover:bg-brand-dark;
+  }
+  .btn-secondary {
+    @apply border-2 border-brand bg-white text-brand hover:bg-tint;
+  }
+
+  .field {
+    @apply w-full rounded-md border border-field bg-white px-3 py-2.5 text-base text-ink;
+  }
+  .field-label {
+    @apply text-sm font-medium text-ink;
+  }
+
+  .card {
+    @apply rounded-lg border border-line bg-white p-6 sm:p-8;
+  }
 }
