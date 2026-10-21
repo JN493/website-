@@ -37,8 +37,7 @@ gtag("consent", "default", {
   security_storage: "granted",
   wait_for_update: 500
 });
-gtag("set", "ads_data_redaction", true);
-gtag("set", "url_passthrough", true);`;
+gtag("set", "ads_data_redaction", true);`;
 
 // Google Tag Manager container GTM-M995FM9J (no <noscript> iframe fallback).
 const tagManager = `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
