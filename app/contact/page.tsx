@@ -8,9 +8,9 @@ import Turnstile, { TURNSTILE_WAIT_MESSAGE } from "@/components/Turnstile";
 import PageHeader from "@/components/PageHeader";
 
 // Invisible copy of the phone line under the Request a Quote and Join Our Team buttons,
-// so all three buttons line up at desktop width. Hidden entirely on phones, where cards stack.
+// so all three buttons line up when the cards sit side by side (lg). Hidden entirely when the cards stack.
 const phoneSpacer = (
-  <p aria-hidden="true" className="invisible hidden md:block text-sm mt-4">
+  <p aria-hidden="true" className="invisible hidden lg:block text-sm mt-4">
     Prefer to talk on the phone? Call us on 01323 846061
   </p>
 );
@@ -134,7 +134,7 @@ export default function Contact() {
 
       {!showQuoteForm && (
         <>
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="grid gap-6 lg:grid-cols-3">
             <section className="card flex flex-col">
               <h2 className="text-xl font-semibold text-brand mb-2">Request a Quote</h2>
               <p className="text-muted">

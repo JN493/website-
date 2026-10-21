@@ -59,7 +59,8 @@ export default function Turnstile({ onToken, resetKey }: { onToken: (token: stri
         widgetId.current = turnstile.render(container.current, {
           sitekey: siteKey,
           theme: "light",
-          size: "flexible",
+          // "flexible" needs at least 300px; on very narrow phones use the compact widget so the page never scrolls sideways.
+          size: container.current.clientWidth < 300 ? "compact" : "flexible",
           callback: (token: string) => {
             setMessage("");
             onTokenRef.current(token);

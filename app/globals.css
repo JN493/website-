@@ -73,7 +73,7 @@
   }
 
   .btn {
-    @apply inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-md px-5 py-2.5 text-center font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-md px-5 py-2.5 text-center font-semibold transition-[color,background-color,border-color] disabled:cursor-not-allowed disabled:opacity-60;
   }
   .btn-primary {
     @apply bg-brand text-white hover:bg-brand-dark;
