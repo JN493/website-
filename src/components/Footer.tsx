@@ -14,8 +14,6 @@ export default function Footer() {
     // Dark blue: .on-dark gives a white focus ring (globals.css). Secondary text is white at 80% (7.47:1).
     <footer className="on-dark mt-24 bg-brand text-sm text-white/80" style={mapSize}>
       <div className="container-page py-12">
-      {/* eslint-disable-next-line @next/next/no-img-element -- static export, images are unoptimised anyway */}
-      <img src="/images/logo/logo-white.png" srcSet="/images/logo/logo-white@2x.png 2x" width={102} height={52} alt="" className="mb-10" />
       <div className="grid gap-8 sm:grid-cols-3 lg:grid-cols-[1fr_1fr_1fr_var(--map-w)]">
         <div>
           <h2 className="mb-3 text-base font-semibold text-white">Find Us</h2>
@@ -55,7 +53,12 @@ export default function Footer() {
         <Link href="/cookies" className="py-2 -my-2 hover:text-white hover:underline">Cookie Policy</Link>
         <CookieSettingsButton />
       </div>
-      <p className="mt-4">&copy; 2026 SLS Fabrications</p>
+      {/* Last row: copyright flush left, decorative logo bottom right (ml-auto keeps it right if the row wraps). */}
+      <div className="mt-4 flex flex-wrap items-end gap-6">
+        <p>&copy; 2026 SLS Fabrications</p>
+        {/* eslint-disable-next-line @next/next/no-img-element -- static export, images are unoptimised anyway */}
+        <img src="/images/logo/logo-white.png" srcSet="/images/logo/logo-white@2x.png 2x" width={102} height={52} alt="" className="ml-auto" />
+      </div>
       </div>
     </footer>
   );
