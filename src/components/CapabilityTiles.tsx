@@ -30,6 +30,14 @@ function lockScroll(on: boolean) {
 const hashSlug = () => decodeURIComponent(window.location.hash.slice(1));
 const urlWithoutHash = () => window.location.pathname + window.location.search;
 
+// The pop-up sits flush under the sticky header. Its top is the header's current bottom edge, measured on open
+// and on resize (the header height can change between screen sizes), passed to CSS as --cap-dialog-top.
+function setDialogTop(dialog: HTMLDialogElement) {
+  const header = document.querySelector("header");
+  const top = header ? Math.max(0, Math.round(header.getBoundingClientRect().bottom)) : 0;
+  dialog.style.setProperty("--cap-dialog-top", `${top}px`);
+}
+
 function showDialog(ctl: Ctl, slug: string, push: boolean) {
   const dialog = ctl.dialogs[slug];
   if (!dialog || dialog.open) return;
@@ -38,6 +46,7 @@ function showDialog(ctl: Ctl, slug: string, push: boolean) {
   if (previous) ctl.dialogs[previous]?.close();
   if (push) window.history.pushState(null, "", `#${slug}`);
   ctl.pushed = push;
+  setDialogTop(dialog);
   dialog.showModal();
   lockScroll(true);
 }
@@ -85,10 +94,16 @@ export default function CapabilityTiles({ items }: { items: Capability[] }) {
   useEffect(() => {
     const state = ctl.current;
     const onPopState = () => syncWithHash(state);
+    const onResize = () => {
+      const open = state.open ? state.dialogs[state.open] : null;
+      if (open) setDialogTop(open);
+    };
+    window.addEventListener("resize", onResize);
     window.addEventListener("popstate", onPopState);
     syncWithHash(state); // page loaded (or returned to) with #slug
     return () => {
       window.removeEventListener("popstate", onPopState);
+      window.removeEventListener("resize", onResize);
       lockScroll(false);
     };
   }, []);
@@ -133,9 +148,11 @@ export default function CapabilityTiles({ items }: { items: Capability[] }) {
           onClick={(e) => {
             if (e.target === e.currentTarget) requestClose(ctl.current); // the backdrop (the panel fills the dialog)
           }}
-          className="cap-dialog m-auto w-[min(42rem,calc(100vw-2rem))] max-w-none overflow-hidden rounded-lg bg-white p-0 text-ink shadow-2xl backdrop:bg-[rgba(20,33,43,0.6)]"
+          // Same width as the page's tile grid (--page-max less two --page-gutter, as .container-page), top flush
+          // under the header (--cap-dialog-top), bottom 16px above the screen edge (dvh, so phone bars do not hide it).
+          className="cap-dialog mx-auto mb-auto mt-[var(--cap-dialog-top,0px)] h-[calc(100dvh_-_var(--cap-dialog-top,0px)_-_16px)] max-h-none w-[calc(min(var(--page-max),100%)_-_2*var(--page-gutter))] max-w-none overflow-hidden rounded-b-lg rounded-t-none bg-white p-0 text-ink shadow-2xl backdrop:bg-[rgba(20,33,43,0.6)]"
         >
-          <div className="flex max-h-[90vh] flex-col">
+          <div className="flex h-full flex-col">
             <div className="flex items-start justify-between gap-4 border-b border-line px-6 py-4 sm:px-8">
               <h2 id={`cap-${c.slug}-title`} className="pt-1.5 text-2xl font-bold tracking-tight text-brand">
                 {c.title}
@@ -150,6 +167,8 @@ export default function CapabilityTiles({ items }: { items: Capability[] }) {
               </button>
             </div>
             <div className="overflow-y-auto px-6 py-6 leading-relaxed sm:px-8">
+              {/* The panel is as wide as the grid, so the text column stops at about 70 characters for comfortable reading. */}
+              <div className="max-w-[70ch]">
               {c.intro.map((p) => (
                 <p key={p} className="mb-4">
                   {p}
@@ -166,6 +185,7 @@ export default function CapabilityTiles({ items }: { items: Capability[] }) {
               <Link href="/contact" className="btn btn-primary mt-6">
                 Contact Us <span aria-hidden="true">→</span>
               </Link>
+              </div>
             </div>
           </div>
         </dialog>

@@ -7,6 +7,15 @@
   --foreground: #14212b;
   /* Height of the sticky header, so anchors and focused elements are never hidden under it. */
   --header-h: 4.5rem;
+  /* Page width and side gutters, used by .container-page and the Capabilities pop-up so their edges line up. */
+  --page-max: 72rem;
+  --page-gutter: 1rem;
+}
+@media (width >= 40rem) {
+  :root { --page-gutter: 1.5rem; }
+}
+@media (width >= 64rem) {
+  :root { --page-gutter: 2rem; }
 }
 
 /* Design tokens. Contrast (WCAG AA) checked for every pair used; see CLAUDE.md "Design system". */
@@ -131,7 +140,7 @@
 
 @layer components {
   .container-page {
-    @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
+    @apply mx-auto w-full max-w-[var(--page-max)] px-[var(--page-gutter)];
   }
 
   .btn {
