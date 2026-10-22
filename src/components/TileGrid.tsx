@@ -27,7 +27,7 @@ export function ImageBox({ title, image, titleAs = "h2", titleId }: { title?: st
 // Non-interactive tiles (Industries). Capabilities uses CapabilityTiles (buttons that open pop-ups).
 export default function TileGrid({ tiles }: { tiles: Tile[] }) {
   return (
-    <ul className="grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+    <ul className="grid auto-rows-fr gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
       {tiles.map((tile) => (
         <Reveal as="li" key={tile.title}>
           <div className="tile h-full">
