@@ -122,10 +122,12 @@ export default function CapabilityTiles({ items }: { items: Capability[] }) {
               aria-labelledby={`cap-${c.slug}-name`}
               aria-describedby={`cap-${c.slug}-sub`}
               onClick={() => showDialog(ctl.current, c.slug, true)}
-              className="tile block h-full w-full cursor-pointer rounded-lg text-left"
+              // Flex column, not block: a <button> centres its contents vertically when it is taller than them,
+              // which pushed the image down on blocks with less text. As in TileGrid, the text area fills the rest.
+              className="tile flex h-full w-full cursor-pointer flex-col rounded-lg text-left"
             >
               <ImageBox title={c.title} image={c.image} titleAs="span" titleId={`cap-${c.slug}-name`} />
-              <span className="tile-desc mt-4 block">
+              <span className="tile-desc mt-4 block flex-1">
                 <span id={`cap-${c.slug}-sub`} className="tile-text block text-muted">{c.subtitle}</span>
               </span>
             </button>

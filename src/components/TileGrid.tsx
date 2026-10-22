@@ -13,7 +13,7 @@ export type Tile = {
 export function ImageBox({ title, image, titleAs = "h2", titleId }: { title?: string; image?: string; titleAs?: "h2" | "span"; titleId?: string }) {
   const Title = titleAs;
   return (
-    <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-steel">
+    <div className="relative aspect-[4/3] shrink-0 overflow-hidden rounded-lg bg-steel">
       {image && <Image src={image} alt="" fill sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" className="object-cover" />}
       {title && (
         <div className="absolute inset-x-0 bottom-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.7),rgba(0,0,0,0))] px-4 pb-3 pt-12">
@@ -30,10 +30,12 @@ export default function TileGrid({ tiles }: { tiles: Tile[] }) {
     <ul className="grid auto-rows-fr gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
       {tiles.map((tile) => (
         <Reveal as="li" key={tile.title}>
-          <div className="tile h-full">
+          {/* Flex column: the image box sits at the top and the text area (.tile-desc, which carries the grey
+              hover gradient) grows to fill the rest, so every block's image and hover box line up and match in size. */}
+          <div className="tile flex h-full flex-col">
             <ImageBox title={tile.title} image={tile.image} />
             {tile.description && (
-              <div className="tile-desc mt-4">
+              <div className="tile-desc mt-4 flex-1">
                 <p className="tile-text text-muted">{tile.description}</p>
               </div>
             )}
