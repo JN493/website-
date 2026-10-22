@@ -2,8 +2,6 @@ import Link from "next/link";
 import MapEmbed from "@/components/MapEmbed";
 import CookieSettingsButton from "@/components/CookieSettingsButton";
 
-const address = "Unit 2 Hythe Works, Diplocks Way, Hailsham BN27 3JF, United Kingdom";
-const mapsQuery = encodeURIComponent(address); // used by the embedded map only
 // The company's Google Maps listing ("SLS Fabrications Ltd", Unit 2 Hythe Works). A short link, so it is for links only:
 // it cannot load inside a frame, and the CSP frame-src only allows https://www.google.com.
 const mapsListing = "https://maps.app.goo.gl/p2S2dNHEghqHfYA49";
@@ -46,7 +44,7 @@ export default function Footer() {
         <div className="h-[var(--map-h)] w-full max-w-[400px] sm:col-span-3 lg:col-span-1 lg:max-w-none">
           <MapEmbed
             title="Map showing SLS Fabrications location"
-            src={`https://www.google.com/maps?q=${mapsQuery}&output=embed`}
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3125.0398538492623!2d0.24844707695479418!3d50.86088335772663!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47df6e3c20ddc4a7%3A0x63b7d5b7c9f6473!2sSLS%20Fabrications%20Ltd!5e1!3m2!1sen!2suk!4v1792674435201!5m2!1sen!2suk"
           />
         </div>
       </div>
