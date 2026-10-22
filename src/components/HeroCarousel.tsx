@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useSyncExternalStore } from "react";
+import Link from "next/link";
 
 // TEST IMAGE: replace before launch. All three slides are test images. Team and laser are Unsplash photos (team is NOT SLS staff); welding is SLS's own
 // but only 382px wide, so it looks soft on large screens. See CLAUDE.md "Launch blockers" and design-assets/SOURCES.md.
@@ -11,6 +12,8 @@ const slides = [
     width: 1920,
     height: 1281,
     position: "50% 70%",
+    headline: "From Concept to Creation. Thoughtfully Engineered.",
+    cta: { label: "Explore Our Services", href: "/capabilities" },
   },
   {
     alt: "A welder in a helmet welding a stainless steel item",
@@ -19,6 +22,9 @@ const slides = [
     width: 382,
     height: 510,
     position: "50% 40%", // portrait source: keep the helmet visor and torch tip in frame
+    headline: "Made to Fit. Built to Perform.",
+    line: "Bespoke fabrication. Practical solutions. Exceptional results.",
+    cta: { label: "Discover What We Do", href: "/capabilities" },
   },
   {
     alt: "A laser cutting head cutting patterns into sheet metal with a spray of sparks",
@@ -27,6 +33,8 @@ const slides = [
     width: 1920,
     height: 1280,
     position: "50% 45%",
+    headline: "Ready to Make It Happen? Let's talk.",
+    cta: { label: "Request a Quote", href: "/contact#quote" }, // opens the quote form
   },
 ];
 
@@ -95,6 +103,7 @@ export default function HeroCarousel() {
               aria-roledescription="slide"
               aria-label={`${i + 1} of ${slides.length}`}
               aria-hidden={!current}
+              inert={!current} // only the visible slide's text and button can be reached by keyboard or screen reader
               className={`absolute inset-0 ${current ? "z-10" : ""} ${motion}`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element -- static export: plain img with srcset */}
@@ -110,6 +119,20 @@ export default function HeroCarousel() {
                 className="h-full w-full object-cover"
                 style={{ objectPosition: slide.position }}
               />
+              {/* Dark gradient so the white text passes 4.5:1 over every photo (strongest at the top, where the text is). */}
+              <div aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.75)_0%,rgba(0,0,0,0.6)_45%,rgba(0,0,0,0.25)_80%,rgba(0,0,0,0.1)_100%)]" />
+              {/* Text top left, clear of the controls pill (bottom right). h2: the page's h1 is "SLS Fabrications". */}
+              {/* Below 360px wide everything is a little tighter so slide 2 stays clear of the controls. */}
+              <div className="on-dark absolute inset-x-0 top-0 max-w-2xl p-5 max-[359px]:p-4 sm:p-8 lg:p-12">
+                <h2 className="text-xl font-bold leading-tight tracking-tight text-white max-[359px]:text-lg sm:text-3xl lg:text-4xl">{slide.headline}</h2>
+                {slide.line && <p className="mt-2 text-sm text-white max-[359px]:mt-1 max-[359px]:text-[0.8125rem] max-[359px]:leading-snug sm:mt-3 sm:text-lg">{slide.line}</p>}
+                <Link
+                  href={slide.cta.href}
+                  className="mt-4 max-[359px]:mt-2.5 inline-flex min-h-11 items-center gap-1.5 rounded-full bg-white px-5 py-2 text-sm font-semibold text-brand shadow-md transition-[transform,background-color] hover:bg-tint-2 focus-visible:bg-tint-2 motion-safe:hover:-translate-y-0.5 motion-safe:focus-visible:-translate-y-0.5 sm:mt-6"
+                >
+                  {slide.cta.label} <span aria-hidden="true">→</span>
+                </Link>
+              </div>
             </div>
           );
         })}
