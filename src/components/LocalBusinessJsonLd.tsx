@@ -1,6 +1,7 @@
 // Structured data for search engines (schema.org LocalBusiness), rendered once in app/layout.tsx.
-// Only verified facts from this repo. Do not add coordinates, social links, services,
-// ratings, price range, email or logo without checking them first.
+// Only verified facts from this repo. Do not add social links, services, ratings, price range,
+// email or logo without checking them first. The coordinates (geo) and hasMap were taken from the
+// Google Maps listing for SLS Fabrications Ltd on 2026-10-22 (pin !3d50.86088!4d0.251022).
 // The address is the workshop (where customers go), not the registered office.
 const localBusiness = {
   "@context": "https://schema.org",
@@ -21,6 +22,12 @@ const localBusiness = {
     addressRegion: "East Sussex",
     postalCode: "BN27 3JF",
     addressCountry: "GB",
+  },
+  hasMap: "https://maps.app.goo.gl/p2S2dNHEghqHfYA49",
+  geo: {
+    "@type": "GeoCoordinates",
+    latitude: 50.86088,
+    longitude: 0.251022,
   },
   // Matches the footer: Mon to Fri, 7:30am to 5:00pm.
   openingHoursSpecification: {
