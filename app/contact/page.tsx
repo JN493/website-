@@ -210,12 +210,12 @@ export default function Contact() {
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className="field-label">Company (optional)</span>
+            <span className="field-label">Company</span>
             <input name="company" type="text" maxLength={200} className="field" />
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className="field-label">Location (town or area) (optional)</span>
+            <span className="field-label">Location (town or area)</span>
             <input name="location" type="text" maxLength={100} className="field" />
           </label>
 
@@ -230,18 +230,17 @@ export default function Contact() {
           </label>
 
           <div className="flex flex-col gap-1">
-            <label htmlFor="quote-need-by" className="field-label">Need by (optional)</label>
-            <input id="quote-need-by" name="need_by" type="text" maxLength={100} aria-describedby="need-by-hint" className="field" />
-            <span id="need-by-hint" className="text-sm text-muted">For example, ASAP or end of November</span>
+            <label htmlFor="quote-need-by" className="field-label">Need by</label>
+            <input id="quote-need-by" name="need_by" type="text" maxLength={100} className="field" />
           </div>
 
           <label className="flex flex-col gap-1">
-            <span className="field-label">Project details (optional)</span>
+            <span className="field-label">Project details</span>
             <textarea name="project_details" rows={4} maxLength={5000} className="field"></textarea>
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className="field-label">Describe what you&apos;re submitting (optional)</span>
+            <span className="field-label">Describe what you&apos;re submitting</span>
             <textarea
               name="submission_description"
               rows={2}
@@ -252,7 +251,7 @@ export default function Contact() {
           </label>
 
           <div className="flex flex-col gap-1">
-            <label htmlFor="quote-files" className="field-label">Upload drawings / files (optional)</label>
+            <label htmlFor="quote-files" className="field-label">Upload drawings / files</label>
             <input
               id="quote-files"
               name="files"
