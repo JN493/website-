@@ -175,6 +175,8 @@ function cleanSource(raw: unknown): Record<string, string> {
 // Emails ALERT_TO (info@) about a saved quote request or job application, through Microsoft Graph
 // (client credentials flow, fetch only). Does nothing unless ALERTS_ENABLED is exactly "true".
 // Plain text only. Logs record ids, statuses and counts, never personal data.
+// If a listed file is not in storage yet, the alert waits (no send, no attempt counted) until the row
+// is ALERT_FILE_WAIT_MS old, then goes out saying the file did not arrive.
 
 type AlertKind = "quote" | "careers";
 type AlertRow = Record<string, unknown> & { id: string; created_at: string; notify_attempts?: number };
@@ -200,6 +202,7 @@ const ALERT_FIELDS: Record<AlertKind, [string, string][]> = {
 };
 const ALERT_LINK_SECONDS = 1209600; // file links last 14 days
 const ALERT_TIMEOUT_MS = 10000;
+const ALERT_FILE_WAIT_MS = 30 * 60 * 1000; // a missing file is waited for until the row is 30 minutes old
 const ALERT_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 class AlertError extends Error {} // messages are safe to log: no personal data
@@ -256,23 +259,26 @@ async function buildAlert(db: SupabaseClient, kind: AlertKind, row: AlertRow) {
     if (value) lines.push(value.includes("\n") ? `${label}:\n${value}` : `${label}: ${value}`);
   }
 
+  let missing = 0;
   const paths = kind === "quote"
     ? (Array.isArray(row.file_paths) ? (row.file_paths as unknown[]).filter((p): p is string => typeof p === "string") : [])
     : (typeof row.file_path === "string" ? [row.file_path] : []);
   if (paths.length) {
-    // Links are made at send time. A file that never uploaded gets a note instead of failing the alert.
+    // Links are made at send time. A file that is not in storage counts as missing (see notifyRow).
     const { data, error } = await db.storage.from(ALERT_BUCKETS[kind]).createSignedUrls(paths, ALERT_LINK_SECONDS);
     if (error || !data) throw new AlertError("signed links failed");
     lines.push("", `Files (links expire ${ukTime(new Date(Date.now() + ALERT_LINK_SECONDS * 1000))}):`);
     for (const path of paths) {
       const link = data.find((d) => d.path === path);
+      const url = link && !link.error && link.signedUrl ? link.signedUrl : null;
+      if (!url) missing++;
       lines.push(`- ${path.slice(path.lastIndexOf("/") + 1)}`);
-      lines.push(`  ${link && !link.error && link.signedUrl ? link.signedUrl : "(link unavailable: the file may not have uploaded)"}`);
+      lines.push(`  ${url ?? "(file did not arrive: the upload may have failed)"}`);
     }
   }
 
   const email = typeof row.email === "string" ? row.email.trim() : "";
-  return { subject, body: lines.join("\n"), replyTo: ALERT_EMAIL_RE.test(email) ? email : null };
+  return { subject, body: lines.join("\n"), replyTo: ALERT_EMAIL_RE.test(email) ? email : null, missing };
 }
 
 async function sendAlertEmail(alert: { subject: string; body: string; replyTo: string | null }) {
@@ -293,13 +299,16 @@ async function sendAlertEmail(alert: { subject: string; body: string; replyTo: s
   if (res.status !== 202) throw new AlertError(`sendMail failed (${res.status})`);
 }
 
-// Sends one alert and records the attempt. Never throws. "disabled" means nothing was sent or recorded.
-async function notifyRow(db: SupabaseClient, kind: AlertKind, row: AlertRow): Promise<"sent" | "failed" | "disabled"> {
+// Sends one alert and records the attempt. Never throws. "disabled" and "waiting" (a file is not in storage yet
+// and the row is under ALERT_FILE_WAIT_MS old) mean nothing was sent and no attempt was recorded.
+async function notifyRow(db: SupabaseClient, kind: AlertKind, row: AlertRow): Promise<"sent" | "failed" | "disabled" | "waiting"> {
   if (!alertsEnabled()) return "disabled";
   const table = ALERT_TABLES[kind];
   const attempts = (Number(row.notify_attempts) || 0) + 1;
   try {
-    await sendAlertEmail(await buildAlert(db, kind, row));
+    const alert = await buildAlert(db, kind, row);
+    if (alert.missing && Date.now() - Date.parse(row.created_at) < ALERT_FILE_WAIT_MS) return "waiting";
+    await sendAlertEmail(alert);
   } catch (err) {
     const reason = err instanceof AlertError ? err.message : ((err as Error | null)?.name ?? "error");
     console.error(`alert failed: ${kind} ${row.id} attempt ${attempts}: ${reason}`);

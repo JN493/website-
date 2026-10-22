@@ -80,7 +80,7 @@ await test("disabled: nothing sent, attempts unchanged, tables not even read", a
   state.tables.job_applications.push(appRow("j1"));
   const r = await sweep();
   assert.equal(r.status, 200);
-  assert.deepEqual(r.body, { enabled: false, due: 0, sent: 0, failed: 0, left_for_next_run: 0 });
+  assert.deepEqual(r.body, { enabled: false, due: 0, sent: 0, failed: 0, waiting: 0, left_for_next_run: 0 });
   assert.equal(graph.tokenCalls + graph.sendAttempts, 0);
   assert.equal(state.tables.quote_requests[0].notify_attempts, 0);
   assert.equal(state.tables.job_applications[0].notify_attempts, 0);
@@ -92,7 +92,7 @@ await test("quote with files: sent with 14-day signed links (1209600 s) and the 
   state.tables.quote_requests.push(quoteRow("q1", { file_paths: ["f-q1/drawing.pdf", "f-q1/photo.jpg"] }));
   state.storage["quote-files"].add("f-q1/drawing.pdf").add("f-q1/photo.jpg");
   const r = await sweep();
-  assert.deepEqual(r.body, { enabled: true, due: 1, sent: 1, failed: 0, left_for_next_run: 0 });
+  assert.deepEqual(r.body, { enabled: true, due: 1, sent: 1, failed: 0, waiting: 0, left_for_next_run: 0 });
   assert.equal(state.signRequests.length, 1);
   assert.equal(state.signRequests[0].expiresIn, 1209600);
   assert.equal(state.signRequests[0].bucket, "quote-files");
@@ -121,11 +121,62 @@ await test("job application: subject, name + email only, CV link from cv-files",
   assert.ok(state.tables.job_applications[0].notified_at);
 });
 
-await test("a file that never uploaded: alert still sent, with a note instead of a link", async () => {
-  state.tables.quote_requests.push(quoteRow("q1", { file_paths: ["f-q1/missing.pdf"] }));
+await test("a file not in storage yet: the row waits (no send, no attempt counted) while under 30 minutes old", async () => {
+  state.tables.quote_requests.push(quoteRow("q1", { created_at: minutesAgo(20), file_paths: ["f-q1/slow.pdf"] }));
+  state.tables.job_applications.push(appRow("j1", { created_at: minutesAgo(29) })); // CV not in storage
+  const r = await sweep();
+  assert.deepEqual(r.body, { enabled: true, due: 2, sent: 0, failed: 0, waiting: 2, left_for_next_run: 0 });
+  assert.equal(graph.sendAttempts, 0);
+  assert.equal(state.tables.quote_requests[0].notify_attempts, 0);
+  assert.equal(state.tables.quote_requests[0].notified_at, null);
+  assert.equal(state.tables.job_applications[0].notify_attempts, 0);
+});
+
+await test("the file arrives while waiting: the next run sends it with a working link", async () => {
+  state.tables.quote_requests.push(quoteRow("q1", { created_at: minutesAgo(15), file_paths: ["f-q1/slow.pdf"] }));
+  assert.equal((await sweep()).body.waiting, 1);
+  state.storage["quote-files"].add("f-q1/slow.pdf"); // upload finished
   const r = await sweep();
   assert.equal(r.body.sent, 1);
-  assert.ok(graph.mails[0].payload.message.body.content.includes("- missing.pdf\n  (link unavailable: the file may not have uploaded)"));
+  const body = graph.mails[0].payload.message.body.content;
+  assert.ok(body.includes("- slow.pdf\n  http://") && !body.includes("did not arrive"));
+  assert.equal(state.tables.quote_requests[0].notify_attempts, 1);
+});
+
+await test("still missing at 30 minutes: sent saying the file did not arrive, and marked notified", async () => {
+  state.tables.quote_requests.push(quoteRow("q1", { created_at: minutesAgo(31), file_paths: ["f-q1/drawing.pdf", "f-q1/never.pdf"] }));
+  state.storage["quote-files"].add("f-q1/drawing.pdf");
+  const r = await sweep();
+  assert.deepEqual(r.body, { enabled: true, due: 1, sent: 1, failed: 0, waiting: 0, left_for_next_run: 0 });
+  const body = graph.mails[0].payload.message.body.content;
+  assert.ok(body.includes("- drawing.pdf\n  http://"), "the file that arrived still gets its link");
+  assert.ok(body.includes("- never.pdf\n  (file did not arrive: the upload may have failed)"));
+  assert.ok(state.tables.quote_requests[0].notified_at);
+  assert.equal((await sweep()).body.due, 0, "not looked at again");
+});
+
+await test("more than 20 waiting rows cannot starve a ready row: the 20-per-run limit counts sends only", async () => {
+  // 25 newer rows waiting for files (10-30 minutes old, files missing), then one older row that is ready.
+  for (let i = 0; i < 25; i++) {
+    state.tables.quote_requests.push(quoteRow(`w${String(i).padStart(2, "0")}`, { created_at: minutesAgo(11 + i * 0.5), file_paths: [`f-w${i}/big.pdf`] }));
+  }
+  state.tables.quote_requests.push(quoteRow("ready", { created_at: minutesAgo(45) })); // no files
+  const r = await sweep();
+  assert.deepEqual(r.body, { enabled: true, due: 26, sent: 1, failed: 0, waiting: 25, left_for_next_run: 0 });
+  assert.equal(graph.mails.length, 1);
+  assert.ok(graph.mails[0].payload.message.body.content.includes("Request ID: ready"));
+  assert.ok(state.tables.quote_requests.find((q) => q.id === "ready").notified_at);
+  assert.ok(state.tables.quote_requests.filter((q) => q.id.startsWith("w")).every((q) => q.notify_attempts === 0 && q.notified_at === null));
+});
+
+await test("waiting rows do not use up the 20 send slots: 25 waiting + 25 ready sends 20 ready, 5 left for next run", async () => {
+  for (let i = 0; i < 25; i++) {
+    state.tables.quote_requests.push(quoteRow(`w${String(i).padStart(2, "0")}`, { created_at: minutesAgo(11 + i * 0.5), file_paths: [`f-w${i}/big.pdf`] }));
+    state.tables.job_applications.push(appRow(`r${String(i).padStart(2, "0")}`, { created_at: minutesAgo(40 + i), file_path: null }));
+  }
+  const r = await sweep();
+  assert.deepEqual(r.body, { enabled: true, due: 50, sent: 20, failed: 0, waiting: 25, left_for_next_run: 5 });
+  assert.equal((await sweep()).body.sent, 5);
 });
 
 await test("Graph failure: retried on each run, stops after 5 attempts, notified_at stays null", async () => {
@@ -158,7 +209,7 @@ await test("backfilled rows (notified_at already set) are never sent", async () 
   state.tables.quote_requests.push(quoteRow("q-old", { created_at: old, notified_at: old }));
   state.tables.job_applications.push(appRow("j-old", { created_at: old, notified_at: old }));
   const r = await sweep();
-  assert.deepEqual(r.body, { enabled: true, due: 0, sent: 0, failed: 0, left_for_next_run: 0 });
+  assert.deepEqual(r.body, { enabled: true, due: 0, sent: 0, failed: 0, waiting: 0, left_for_next_run: 0 });
   assert.equal(graph.sendAttempts, 0);
 });
 
@@ -223,7 +274,7 @@ await test("no personal data in any log line", async () => {
   const joined = logs.join("\n");
   assert.ok(logs.some((l) => l.startsWith("alert sweep:")), "sweep logs were captured");
   assert.ok(logs.some((l) => l.startsWith("alert failed:")), "failure logs were captured");
-  for (const value of ["Jane", "Testperson", "07700", "jane.testperson@", "Testco", "Hailsham", "Brackets", "Sam Applicant", "sam.applicant@", "Sam_CV", "drawing.pdf", "photo.jpg", "missing.pdf", "victim@", "Eve", "info@example.invalid", "website-alerts@", "graph-secret-123", SECRET, "fake-graph-token", "token=signed"]) {
+  for (const value of ["Jane", "Testperson", "07700", "jane.testperson@", "Testco", "Hailsham", "Brackets", "Sam Applicant", "sam.applicant@", "Sam_CV", "drawing.pdf", "photo.jpg", "slow.pdf", "never.pdf", "big.pdf", "victim@", "Eve", "info@example.invalid", "website-alerts@", "graph-secret-123", SECRET, "fake-graph-token", "token=signed"]) {
     assert.ok(!joined.includes(value), `log contains "${value}"`);
   }
 });

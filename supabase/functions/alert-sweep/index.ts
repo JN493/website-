@@ -9,13 +9,18 @@
 //   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY - provided automatically
 //
 // Picks up quote requests and job applications with notified_at null, fewer than 5 attempts and
-// created more than 10 minutes ago (so the browser has finished uploading any files), newest first,
-// at most 20 per run. Each try increments notify_attempts; success sets notified_at.
-// Returns counts only. Needs supabase/alerts.sql to have been run first.
+// created more than 10 minutes ago (so the browser has finished uploading any files), newest first.
+// A row whose file is still not in storage waits (no send, no attempt) until it is 30 minutes old,
+// then goes out saying the file did not arrive. At most 20 sends are attempted per run, counted after
+// skipping waiting rows, so waiting rows can never use up the slots. Each try increments
+// notify_attempts; success sets notified_at. Returns counts only. Needs supabase/alerts.sql first.
 
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 
-const MAX_PER_RUN = 20;
+const MAX_PER_RUN = 20; // send attempts per run (waiting rows do not count)
+// Rows read per table per run. Larger than MAX_PER_RUN so rows still waiting for a file cannot hide
+// rows that are ready. Waiting rows are at most ~20 minutes' worth of submissions (10 to 30 minutes old).
+const LOOKUP_LIMIT = 200;
 const MAX_ATTEMPTS = 5;
 const MIN_AGE_MS = 10 * 60 * 1000; // wait 10 minutes before sending, so any file upload has finished
 // Stop starting new emails after this long, so a slow run (10s timeouts) ends well inside the
@@ -30,6 +35,8 @@ const TIME_BUDGET_MS = 100_000;
 // Emails ALERT_TO (info@) about a saved quote request or job application, through Microsoft Graph
 // (client credentials flow, fetch only). Does nothing unless ALERTS_ENABLED is exactly "true".
 // Plain text only. Logs record ids, statuses and counts, never personal data.
+// If a listed file is not in storage yet, the alert waits (no send, no attempt counted) until the row
+// is ALERT_FILE_WAIT_MS old, then goes out saying the file did not arrive.
 
 type AlertKind = "quote" | "careers";
 type AlertRow = Record<string, unknown> & { id: string; created_at: string; notify_attempts?: number };
@@ -55,6 +62,7 @@ const ALERT_FIELDS: Record<AlertKind, [string, string][]> = {
 };
 const ALERT_LINK_SECONDS = 1209600; // file links last 14 days
 const ALERT_TIMEOUT_MS = 10000;
+const ALERT_FILE_WAIT_MS = 30 * 60 * 1000; // a missing file is waited for until the row is 30 minutes old
 const ALERT_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 class AlertError extends Error {} // messages are safe to log: no personal data
@@ -111,23 +119,26 @@ async function buildAlert(db: SupabaseClient, kind: AlertKind, row: AlertRow) {
     if (value) lines.push(value.includes("\n") ? `${label}:\n${value}` : `${label}: ${value}`);
   }
 
+  let missing = 0;
   const paths = kind === "quote"
     ? (Array.isArray(row.file_paths) ? (row.file_paths as unknown[]).filter((p): p is string => typeof p === "string") : [])
     : (typeof row.file_path === "string" ? [row.file_path] : []);
   if (paths.length) {
-    // Links are made at send time. A file that never uploaded gets a note instead of failing the alert.
+    // Links are made at send time. A file that is not in storage counts as missing (see notifyRow).
     const { data, error } = await db.storage.from(ALERT_BUCKETS[kind]).createSignedUrls(paths, ALERT_LINK_SECONDS);
     if (error || !data) throw new AlertError("signed links failed");
     lines.push("", `Files (links expire ${ukTime(new Date(Date.now() + ALERT_LINK_SECONDS * 1000))}):`);
     for (const path of paths) {
       const link = data.find((d) => d.path === path);
+      const url = link && !link.error && link.signedUrl ? link.signedUrl : null;
+      if (!url) missing++;
       lines.push(`- ${path.slice(path.lastIndexOf("/") + 1)}`);
-      lines.push(`  ${link && !link.error && link.signedUrl ? link.signedUrl : "(link unavailable: the file may not have uploaded)"}`);
+      lines.push(`  ${url ?? "(file did not arrive: the upload may have failed)"}`);
     }
   }
 
   const email = typeof row.email === "string" ? row.email.trim() : "";
-  return { subject, body: lines.join("\n"), replyTo: ALERT_EMAIL_RE.test(email) ? email : null };
+  return { subject, body: lines.join("\n"), replyTo: ALERT_EMAIL_RE.test(email) ? email : null, missing };
 }
 
 async function sendAlertEmail(alert: { subject: string; body: string; replyTo: string | null }) {
@@ -148,13 +159,16 @@ async function sendAlertEmail(alert: { subject: string; body: string; replyTo: s
   if (res.status !== 202) throw new AlertError(`sendMail failed (${res.status})`);
 }
 
-// Sends one alert and records the attempt. Never throws. "disabled" means nothing was sent or recorded.
-async function notifyRow(db: SupabaseClient, kind: AlertKind, row: AlertRow): Promise<"sent" | "failed" | "disabled"> {
+// Sends one alert and records the attempt. Never throws. "disabled" and "waiting" (a file is not in storage yet
+// and the row is under ALERT_FILE_WAIT_MS old) mean nothing was sent and no attempt was recorded.
+async function notifyRow(db: SupabaseClient, kind: AlertKind, row: AlertRow): Promise<"sent" | "failed" | "disabled" | "waiting"> {
   if (!alertsEnabled()) return "disabled";
   const table = ALERT_TABLES[kind];
   const attempts = (Number(row.notify_attempts) || 0) + 1;
   try {
-    await sendAlertEmail(await buildAlert(db, kind, row));
+    const alert = await buildAlert(db, kind, row);
+    if (alert.missing && Date.now() - Date.parse(row.created_at) < ALERT_FILE_WAIT_MS) return "waiting";
+    await sendAlertEmail(alert);
   } catch (err) {
     const reason = err instanceof AlertError ? err.message : ((err as Error | null)?.name ?? "error");
     console.error(`alert failed: ${kind} ${row.id} attempt ${attempts}: ${reason}`);
@@ -193,7 +207,7 @@ Deno.serve(async (req) => {
   if (!secret || !safeEqual(req.headers.get("x-alert-secret") ?? "", secret)) return json({ error: "Unauthorized" }, 401);
 
   // Off: send nothing, count nothing, do not even look at the tables.
-  if (!alertsEnabled()) return json({ enabled: false, due: 0, sent: 0, failed: 0, left_for_next_run: 0 }, 200);
+  if (!alertsEnabled()) return json({ enabled: false, due: 0, sent: 0, failed: 0, waiting: 0, left_for_next_run: 0 }, 200);
 
   const started = Date.now();
   const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
@@ -210,7 +224,7 @@ Deno.serve(async (req) => {
       .lt("notify_attempts", MAX_ATTEMPTS)
       .lt("created_at", cutoff)
       .order("created_at", { ascending: false })
-      .limit(MAX_PER_RUN);
+      .limit(LOOKUP_LIMIT);
     if (error) {
       console.error(`alert sweep lookup failed: ${kind} (${error.code ?? "db error"})`);
       return json({ error: "lookup failed" }, 500);
@@ -218,17 +232,19 @@ Deno.serve(async (req) => {
     for (const row of (data ?? []) as AlertRow[]) due.push({ kind, row });
   }
 
-  // Newest first across both tables, at most MAX_PER_RUN per run.
+  // Newest first across both tables. The MAX_PER_RUN limit counts send attempts only (sent + failed),
+  // so rows that are still waiting for a file are skipped without using up a slot.
   due.sort((a, b) => Date.parse(b.row.created_at) - Date.parse(a.row.created_at));
-  const counts = { enabled: true, due: due.length, sent: 0, failed: 0, left_for_next_run: 0 };
-  for (const [i, { kind, row }] of due.entries()) {
-    if (i >= MAX_PER_RUN || Date.now() - started > TIME_BUDGET_MS) {
+  const counts = { enabled: true, due: due.length, sent: 0, failed: 0, waiting: 0, left_for_next_run: 0 };
+  for (const { kind, row } of due) {
+    if (counts.sent + counts.failed >= MAX_PER_RUN || Date.now() - started > TIME_BUDGET_MS) {
       counts.left_for_next_run++;
       continue;
     }
     const result = await notifyRow(db, kind, row);
     if (result === "sent") counts.sent++;
     else if (result === "failed") counts.failed++;
+    else if (result === "waiting") counts.waiting++;
   }
   console.log(`alert sweep: ${JSON.stringify(counts)}`);
   return json(counts, 200);
