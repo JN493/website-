@@ -56,8 +56,9 @@ export default function Footer() {
       {/* Last row: copyright flush left, decorative logo bottom right (ml-auto keeps it right if the row wraps). */}
       <div className="mt-4 flex flex-wrap items-end gap-6">
         <p>&copy; 2026 SLS Fabrications</p>
+        {/* Lazy: it is at the bottom of the page, and React only preloads non-lazy images (the preload went unused). */}
         {/* eslint-disable-next-line @next/next/no-img-element -- static export, images are unoptimised anyway */}
-        <img src="/images/logo/logo-white.png" srcSet="/images/logo/logo-white@2x.png 2x" width={102} height={52} alt="" className="ml-auto" />
+        <img src="/images/logo/logo-white.png" srcSet="/images/logo/logo-white@2x.png 2x" width={102} height={52} alt="" loading="lazy" className="ml-auto" />
       </div>
       </div>
     </footer>

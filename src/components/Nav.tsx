@@ -32,7 +32,7 @@ export default function Nav() {
       <div className="container-page flex h-[var(--header-h)] items-center justify-between">
       <Link href="/" aria-label="SLS Fabrications home" className="rounded-sm">
         {/* eslint-disable-next-line @next/next/no-img-element -- static export, images are unoptimised anyway */}
-        <img src="/images/logo/logo-blue.png" srcSet="/images/logo/logo-blue@2x.png 2x" width={102} height={52} alt="" />
+        <img src="/images/logo/logo-blue.png" srcSet="/images/logo/logo-blue.png 1x, /images/logo/logo-blue@2x.png 2x" width={102} height={52} alt="" />
       </Link>
       <nav aria-label="Main" className="hidden md:flex gap-1 text-[0.9375rem] font-medium">
         {links.map(([href, label]) => (
