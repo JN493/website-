@@ -1,6 +1,6 @@
 # SLS Fabrications Website: Project Context
 
-Last updated: 2026-10-21. Keep this file current: after any task that changes the site, hosting, content decisions or status, update the relevant section in the same commit.
+Last updated: 2026-10-22. Keep this file current: after any task that changes the site, hosting, content decisions or status, update the relevant section in the same commit.
 
 ## About the business
 SLS Fabrications is a welding and steel fabrication workshop based in Hailsham, East Sussex, UK.
@@ -13,6 +13,82 @@ SLS Fabrications is a welding and steel fabrication workshop based in Hailsham, 
 
 ## Project goal
 Build the company website now, and later an internal workshop efficiency app (Supabase backend). Next.js (App Router) + Tailwind, static export.
+
+## Project status (2026-10-22)
+As recorded by the developer on 2026-10-22. Some older sections below predate it and have not been reconciled yet; where they disagree, ask before acting.
+
+Working rules for future sessions
+- Do not push unless the developer asks.
+- Commit in small stages.
+- Report with evidence and say what could not be verified.
+- No em dashes in site copy.
+- Ask before adding details or copy the developer has not given.
+
+Done
+- Site: Next.js static export on Cloudflare Workers, preview at https://website.robstonesls77.workers.dev (behind Cloudflare Access), built from GitHub `main`. Not on the real domain yet.
+- Forms (quote, brochure, careers) with Turnstile, honeypot, Supabase Edge Function `submit-form`, contacts table.
+- Quote form has two optional fields, Location (town or area) and Need by (free text), stored in `quote_requests.location` and `quote_requests.need_by` (100 characters max each, null when empty).
+- Form labels have no "(optional)" markers and no asterisks; required fields use the native `required` attribute.
+- Security headers with an enforcing CSP covering Tag Manager, Google Analytics, Cookiebot, Turnstile and Supabase.
+- Cookiebot (Domain Group ID fbd2a6ae-76e6-4170-bb8d-46ced9c918cf, preview added as an alias) loaded directly from `app/layout.tsx` after the Consent Mode defaults and Tag Manager.
+- Tag Manager container GTM-M995FM9J is published:
+  - The Google tag (G-24P1P65D2S) and the GA4 event tag both require `analytics_storage` consent.
+  - The Google tag also fires on the custom event `cookie_consent_update` and is set to fire once per page.
+  - Tested: no collect requests or `_ga` cookies before consent or after reject; `page_view`, `phone_click` and `email_click` are sent after accepting statistics.
+- Full redesign:
+  - Inter font, brand blue #004167, sticky header, blue footer with the white logo bottom right.
+  - Hero carousel (team, welding, laser cutting) with dots and an integrated pause control.
+  - Short blue accent lines under headings, subtle fade-up on scroll, tile hover effect on Capabilities and Industries.
+- Accessibility baseline (axe zero violations, keyboard pass) at the last redesign commit. Re-run after any further design change.
+- Retention deletion job:
+  - Deployed in Supabase, runs daily at 03:30 UTC in DRY-RUN mode, logs in `retention_log`.
+  - Real deletion is OFF (`RETENTION_DELETE_ENABLED` not set).
+  - The optional real-deletion test with fake rows was skipped and is still recommended before launch.
+  - First real data will not reach 12 months until about October 2027; review the log and enable real deletion before then.
+  - The secret lives only in a password manager, Supabase function secrets and Vault, never in the repo.
+- Structured data (LocalBusiness JSON-LD), sitemap and robots.
+
+Decisions
+- Cookiebot stays; CookieYes was rejected.
+- Email stays on Microsoft 365; Google Workspace was dropped. An admin account is being set up properly. info@slsfabrications.com does not exist yet and must be working before launch.
+- Hero images: the team and laser photos are Unsplash TEST images; the welding photo is SLS's own but low resolution.
+- Copy is placeholder until the consultant writes it.
+- Home tagline: "Sheet metal and welding specialists, bespoke service & designs from small to large scale projects." ("Steel shaped to spec" was removed.)
+- The workshop app (a dashboard for tracking jobs and workflows) is planned for later. Google sign-in is no longer assumed because Workspace was dropped.
+
+Open items before launch
+- Privacy Policy and Cookie Policy rewrite. Draft the text for approval before editing the site. It is one combined change with a new "Last updated" date, covering:
+  - Google Analytics and Tag Manager.
+  - Cookiebot consent logging and its cookie.
+  - Exact cookies and lifespans, taken from the vendors' documentation.
+  - The 12-month retention rules.
+  - The new quote fields.
+  - The Microsoft email line.
+  - The ICO registration number ZC269397 (verify it against the certificate and the ICO register).
+  - The backups line.
+  - The Cookie Policy line saying the site stores nothing in the browser, which is no longer true.
+- Microsoft 365:
+  - Admin access, create info@, verify the domain with a DNS record, enable DKIM.
+  - Do not touch MX or SPF records until reviewed.
+  - Do not delete the two Netlify CNAMEs until launch.
+- Brochure emailing is not built. It needs the brochure PDF, approved wording, a sender address and DKIM.
+- Launch steps:
+  - Attach the domain to the Worker.
+  - Set up www and .co.uk redirects, and HSTS.
+  - Retire Netlify.
+  - Submit the sitemap in Search Console and run the Rich Results test.
+  - On the real domain, check the CSP and that there is no Access login.
+- Supabase:
+  - Check backup retention on our plan.
+  - Sweep for orphaned quote-files uploads.
+  - Run the real-deletion test.
+- Replace the test hero images and get a full-size welding photo.
+- Optionally add the logo to the JSON-LD.
+- Test with a real screen reader (NVDA or VoiceOver) and a real phone.
+- Check the Cookiebot privacy icon against the footer on the preview.
+- Check whether Next.js link-prefetch requests return 404 on the Worker (seen on a local static server).
+- Industries tiles have no description, so the hover gradient only shows on Capabilities. Decide whether to add something.
+- Consider an internal-traffic filter in Google Analytics after launch.
 
 ## Hosting and deployment (current)
 - Host: Cloudflare Workers with static assets. Worker name `website`. Config in `wrangler.jsonc` (assets directory `./out`, 404 page handling).
