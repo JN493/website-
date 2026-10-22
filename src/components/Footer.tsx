@@ -3,7 +3,10 @@ import MapEmbed from "@/components/MapEmbed";
 import CookieSettingsButton from "@/components/CookieSettingsButton";
 
 const address = "Unit 2 Hythe Works, Diplocks Way, Hailsham BN27 3JF, United Kingdom";
-const mapsQuery = encodeURIComponent(address);
+const mapsQuery = encodeURIComponent(address); // used by the embedded map only
+// The company's Google Maps listing ("SLS Fabrications Ltd", Unit 2 Hythe Works). A short link, so it is for links only:
+// it cannot load inside a frame, and the CSP frame-src only allows https://www.google.com.
+const mapsListing = "https://maps.app.goo.gl/p2S2dNHEghqHfYA49";
 
 // Footer map size. Width applies from lg (1024px) up, where the map is the right-hand column;
 // below that it stacks under the other columns at full width, up to 400px.
@@ -24,7 +27,7 @@ export default function Footer() {
             United Kingdom
           </address>
           <a
-            href={`https://www.google.com/maps/search/?api=1&query=${mapsQuery}`}
+            href={mapsListing}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-1 inline-block py-2 -mb-2 text-white underline underline-offset-4 hover:no-underline"
