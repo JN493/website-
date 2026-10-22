@@ -62,6 +62,16 @@ export function startFake(state) {
       state.requests.push(`${req.method} ${url.pathname}`);
       (state.fullRequests ??= []).push(`${req.method} ${url.pathname}${decodeURIComponent(url.search)}${body?.prefixes ? " " + body.prefixes.join(",") : ""}`);
 
+      // Used by the submit-form tests: the upsert_contact RPC and signed upload URLs.
+      if (url.pathname === "/rest/v1/rpc/upsert_contact" && req.method === "POST") {
+        const contacts = (state.tables.contacts ??= []);
+        let contact = contacts.find((c) => c.email === body.p_email.trim().toLowerCase());
+        if (!contact) contacts.push((contact = { id: `contact-${contacts.length + 1}`, email: body.p_email.trim().toLowerCase() }));
+        return send(res, 200, contact.id);
+      }
+      const sign = url.pathname.match(/^\/storage\/v1\/object\/upload\/sign\/([a-z-]+)\/(.+)$/);
+      if (sign && req.method === "POST") return send(res, 200, { url: `/object/upload/sign/${sign[1]}/${sign[2]}?token=test-token` });
+
       const rest = url.pathname.match(/^\/rest\/v1\/([a-z_]+)$/);
       if (rest) {
         const table = rest[1];

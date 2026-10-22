@@ -51,6 +51,12 @@ where table_schema = 'public'
   and table_name = 'retention_log'
   and grantee in ('anon', 'authenticated');
 
+-- Good result: two rows, quote_requests_need_by_length and quote_requests_location_length
+-- (the 100-character limits on the optional quote fields, from supabase/quote-fields.sql).
+select conname, pg_get_constraintdef(oid)
+from pg_constraint
+where conrelid = 'public.quote_requests'::regclass and conname like 'quote_requests_%_length';
+
 -- Good result: two rows (quote_requests, brochure_requests), each with confdeltype = 'a' (no action).
 -- 'c' (cascade) or 'n' (set null) would mean deleting a contact could change or remove requests.
 select conrelid::regclass as referencing_table, conname, confdeltype

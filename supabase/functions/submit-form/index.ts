@@ -11,7 +11,8 @@
 // -> insert the row -> return the upload URLs.
 //
 // Needs supabase/add-source-and-contacts.sql to have been run first (source columns,
-// contacts table, contact_id columns and the upsert_contact function).
+// contacts table, contact_id columns and the upsert_contact function), and supabase/quote-fields.sql
+// (need_by and location columns on quote_requests).
 //
 // Known limitation: the row is saved before the browser uploads the files,
 // so a failed upload can leave a row whose file_paths point at missing files.
@@ -37,10 +38,15 @@ const FIELDS: Record<string, Record<string, [boolean, number]>> = {
     email: [true, 200],
     project_details: [false, 5000],
     submission_description: [false, 1000],
+    need_by: [false, 100],
+    location: [false, 100],
   },
   brochure: { email: [true, 200] },
   careers: { name: [true, 200], email: [true, 200] },
 };
+
+// Optional fields stored as null when empty (nullable columns). Other optional fields are stored as "".
+const NULL_WHEN_EMPTY = new Set(["need_by", "location"]);
 
 const TABLES: Record<string, string> = {
   quote: "quote_requests",
@@ -107,14 +113,14 @@ async function verifyTurnstile(token: string, ip: string | null) {
 function cleanFields(form: string, raw: unknown) {
   if (typeof raw !== "object" || raw === null) throw new Rejected("fields missing");
   const input = raw as Record<string, unknown>;
-  const row: Record<string, string> = {};
+  const row: Record<string, string | null> = {};
   for (const [key, [required, maxLength]] of Object.entries(FIELDS[form])) {
     const value = typeof input[key] === "string" ? (input[key] as string).trim() : "";
     if (required && !value) throw new Rejected(`${key} required`);
     if (value.length > maxLength) throw new Rejected(`${key} too long`);
-    row[key] = value; // optional fields are stored as "" (quote_requests.company is NOT NULL)
+    row[key] = value || (NULL_WHEN_EMPTY.has(key) ? null : ""); // other optional fields are stored as "" (quote_requests.company is NOT NULL)
   }
-  if (!EMAIL_RE.test(row.email)) throw new Rejected("email invalid");
+  if (!EMAIL_RE.test(row.email ?? "")) throw new Rejected("email invalid");
   if (input.consent !== true) throw new Rejected("consent missing");
   return row;
 }
