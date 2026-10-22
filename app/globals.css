@@ -92,8 +92,8 @@
 /* Tile hover (TileGrid on /capabilities and /industries): text lifts 6px and a light grey gradient fades in behind
    the description. The image never moves and the layout never changes. Hover only on devices that can hover, so touch
    screens never get a stuck state; :focus-within covers keyboard users once tiles are links.
-   Tiles are NOT links yet, so there is deliberately no cursor: pointer. When a tile gets an href, add cursor: pointer
-   to .tile (link variant) in the same change. Description text on the strongest grey (#eceef0): 5.97:1. */
+   Industries tiles are not interactive (normal cursor). Capabilities tiles are buttons that open a pop-up
+   (src/components/CapabilityTiles.tsx) and set cursor: pointer themselves. Description text on the strongest grey (#eceef0): 5.97:1. */
 .tile-text { transition: transform 200ms ease-out; }
 .tile-desc { position: relative; isolation: isolate; }
 .tile-desc::before {
@@ -115,6 +115,18 @@
 @media (prefers-reduced-motion: reduce) {
   /* No movement; the gradient still fades in. */
   .tile-text { transition: none; transform: none !important; }
+}
+
+/* Capabilities pop-ups (native <dialog>): a short fade and lift on open, none with reduced motion. */
+@keyframes cap-dialog-in {
+  from { opacity: 0; transform: translateY(8px); }
+}
+@keyframes cap-backdrop-in {
+  from { opacity: 0; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .cap-dialog[open] { animation: cap-dialog-in 180ms ease-out; }
+  .cap-dialog[open]::backdrop { animation: cap-backdrop-in 180ms ease-out; }
 }
 
 @layer components {
