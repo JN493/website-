@@ -1,5 +1,6 @@
 // A tiny in-memory stand-in for the parts of Supabase that retention-cleanup uses.
-// PostgREST: GET (select, lt / is.null / in / eq filters, order, limit), DELETE (filters), POST (insert).
+// PostgREST: GET (select, lt / is.null / in / eq filters, order, limit), DELETE (filters), POST (insert, optionally
+// returning the row), PATCH (update). Storage also: signed upload URLs and signed download links (submit-form, alerts).
 // Foreign keys: deleting a contact still referenced by quote_requests or brochure_requests fails with 23503,
 // like the real ON DELETE NO ACTION constraints. Storage: remove (DELETE object/<bucket>) and list.
 // Nothing here talks to a real Supabase project.
@@ -10,7 +11,11 @@ function matches(row, key, raw) {
   if (raw === "is.null") return value === null || value === undefined;
   if (raw === "not.is.null") return value !== null && value !== undefined;
   if (raw.startsWith("eq.")) return String(value) === raw.slice(3);
-  if (raw.startsWith("lt.")) return value !== null && value !== undefined && Date.parse(value) < Date.parse(raw.slice(3));
+  if (raw.startsWith("lt.")) {
+    if (value === null || value === undefined) return false;
+    if (typeof value === "number") return value < Number(raw.slice(3)); // e.g. notify_attempts=lt.5
+    return Date.parse(value) < Date.parse(raw.slice(3));
+  }
   if (raw.startsWith("in.(")) {
     const list = raw.slice(4, -1).split(",").map((v) => v.replace(/^"|"$/g, ""));
     return value !== null && value !== undefined && list.includes(String(value));
@@ -71,6 +76,15 @@ export function startFake(state) {
       }
       const sign = url.pathname.match(/^\/storage\/v1\/object\/upload\/sign\/([a-z-]+)\/(.+)$/);
       if (sign && req.method === "POST") return send(res, 200, { url: `/object/upload/sign/${sign[1]}/${sign[2]}?token=test-token` });
+      // Signed download links (createSignedUrls). Records the expiry asked for; a missing file gets a per-file error.
+      const signMany = url.pathname.match(/^\/storage\/v1\/object\/sign\/([a-z-]+)$/);
+      if (signMany && req.method === "POST") {
+        const bucket = state.storage[signMany[1]] ?? new Set();
+        (state.signRequests ??= []).push({ bucket: signMany[1], expiresIn: body.expiresIn, paths: body.paths });
+        return send(res, 200, body.paths.map((p) => bucket.has(p)
+          ? { path: p, signedURL: `/object/sign/${signMany[1]}/${p}?token=signed-${body.expiresIn}`, error: null }
+          : { path: p, signedURL: null, error: "Object not found" }));
+      }
 
       const rest = url.pathname.match(/^\/rest\/v1\/([a-z_]+)$/);
       if (rest) {
@@ -82,8 +96,25 @@ export function startFake(state) {
           return send(res, 200, query(rows, url.searchParams));
         }
         if (req.method === "POST") {
-          for (const r of [].concat(body)) rows.push({ id: `${table}-${rows.length + 1}`, run_at: new Date().toISOString(), ...r });
+          // Column defaults like the real tables: created_at on the three request tables, alert tracking
+          // (supabase/alerts.sql) on quote_requests and job_applications.
+          const defaults = {
+            ...(["quote_requests", "job_applications", "brochure_requests"].includes(table) && { created_at: new Date().toISOString() }),
+            ...(["quote_requests", "job_applications"].includes(table) && { notified_at: null, notify_attempts: 0 }),
+          };
+          const inserted = [].concat(body).map((r, i) => ({ id: `${table}-${rows.length + i + 1}`, run_at: new Date().toISOString(), ...defaults, ...r }));
+          rows.push(...inserted);
+          // insert().select().single() asks for the row back.
+          if ((req.headers.prefer ?? "").includes("return=representation")) {
+            return send(res, 201, (req.headers.accept ?? "").includes("vnd.pgrst.object") ? inserted[0] : inserted);
+          }
           return send(res, 201);
+        }
+        if (req.method === "PATCH") {
+          if (state.failPatch?.(table)) return send(res, 500, { code: "XX000", message: "simulated update failure" });
+          const target = query(rows, new URLSearchParams([...url.searchParams].filter(([k]) => k !== "select")));
+          for (const r of target) Object.assign(r, body);
+          return send(res, 204);
         }
         if (req.method === "DELETE") {
           const doomed = query(rows, new URLSearchParams([...url.searchParams].filter(([k]) => k !== "select")));

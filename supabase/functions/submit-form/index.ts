@@ -5,19 +5,21 @@
 //   TURNSTILE_SECRET_KEY        - Cloudflare Turnstile secret
 //   SUPABASE_URL                - provided automatically
 //   SUPABASE_SERVICE_ROLE_KEY   - provided automatically
+//   ALERTS_ENABLED              - alert emails are sent only when this is exactly "true"
+//   GRAPH_TENANT_ID, GRAPH_CLIENT_ID, GRAPH_CLIENT_SECRET, ALERT_FROM, ALERT_TO - Microsoft Graph (see CLAUDE.md)
 //
 // Flow: check origin -> honeypot -> verify Turnstile -> validate fields, files and source
 // -> create signed upload URLs -> (quote/brochure) find-or-create the contact by email
-// -> insert the row -> return the upload URLs.
+// -> insert the row -> (quote without files) send the alert email -> return the upload URLs.
 //
 // Needs supabase/add-source-and-contacts.sql to have been run first (source columns,
 // contacts table, contact_id columns and the upsert_contact function), and supabase/quote-fields.sql
-// (need_by and location columns on quote_requests).
+// (need_by and location columns on quote_requests), and supabase/alerts.sql (notified_at, notify_attempts).
 //
 // Known limitation: the row is saved before the browser uploads the files,
 // so a failed upload can leave a row whose file_paths point at missing files.
 
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 
 const ALLOWED_ORIGINS = [
   "https://slsfabrications.com",
@@ -165,6 +167,160 @@ function cleanSource(raw: unknown): Record<string, string> {
   return out;
 }
 
+// ===== ALERT CODE START =====
+// Identical copy in supabase/functions/submit-form/index.ts and supabase/functions/alert-sweep/index.ts:
+// each function is pasted into the dashboard on its own, so they cannot share an import.
+// A test checks both copies match, so change them together.
+//
+// Emails ALERT_TO (info@) about a saved quote request or job application, through Microsoft Graph
+// (client credentials flow, fetch only). Does nothing unless ALERTS_ENABLED is exactly "true".
+// Plain text only. Logs record ids, statuses and counts, never personal data.
+
+type AlertKind = "quote" | "careers";
+type AlertRow = Record<string, unknown> & { id: string; created_at: string; notify_attempts?: number };
+
+const ALERT_TABLES: Record<AlertKind, string> = { quote: "quote_requests", careers: "job_applications" };
+const ALERT_BUCKETS: Record<AlertKind, string> = { quote: "quote-files", careers: "cv-files" };
+// Fields in the form's order: [column, label]. Empty fields are left out of the email.
+const ALERT_FIELDS: Record<AlertKind, [string, string][]> = {
+  quote: [
+    ["name", "Name"],
+    ["company", "Company"],
+    ["location", "Location"],
+    ["phone", "Phone"],
+    ["email", "Email"],
+    ["need_by", "Need by"],
+    ["project_details", "Project details"],
+    ["submission_description", "Description"],
+  ],
+  careers: [
+    ["name", "Name"],
+    ["email", "Email"],
+  ],
+};
+const ALERT_LINK_SECONDS = 1209600; // file links last 14 days
+const ALERT_TIMEOUT_MS = 10000;
+const ALERT_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+class AlertError extends Error {} // messages are safe to log: no personal data
+
+function alertsEnabled() {
+  return Deno.env.get("ALERTS_ENABLED") === "true";
+}
+
+function alertEnv(name: string) {
+  const value = Deno.env.get(name);
+  if (!value) throw new AlertError(`missing ${name}`);
+  return value;
+}
+
+// One line, no control characters (so CR/LF can never reach a header), capped.
+function oneLine(value: string, max: number) {
+  return value.replace(/[\u0000-\u001f\u007f\p{Zl}\p{Zp}]+/gu, " ").replace(/\s+/g, " ").trim().slice(0, max);
+}
+
+function ukTime(date: Date) {
+  return new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", dateStyle: "full", timeStyle: "short" }).format(date) + " (UK time)";
+}
+
+function alertFetch(url: string, init: RequestInit) {
+  return fetch(url, { ...init, signal: AbortSignal.timeout(ALERT_TIMEOUT_MS) });
+}
+
+let graphToken: { value: string; expires: number } | null = null;
+async function getGraphToken() {
+  if (graphToken && graphToken.expires > Date.now() + 60_000) return graphToken.value;
+  const tenant = encodeURIComponent(alertEnv("GRAPH_TENANT_ID"));
+  const res = await alertFetch(`https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`, {
+    method: "POST",
+    body: new URLSearchParams({
+      client_id: alertEnv("GRAPH_CLIENT_ID"),
+      client_secret: alertEnv("GRAPH_CLIENT_SECRET"),
+      scope: "https://graph.microsoft.com/.default",
+      grant_type: "client_credentials",
+    }),
+  });
+  if (!res.ok) throw new AlertError(`token request failed (${res.status})`);
+  const data = await res.json().catch(() => null);
+  if (typeof data?.access_token !== "string") throw new AlertError("token missing from response");
+  graphToken = { value: data.access_token, expires: Date.now() + (Number(data.expires_in) || 3000) * 1000 };
+  return graphToken.value;
+}
+
+async function buildAlert(db: SupabaseClient, kind: AlertKind, row: AlertRow) {
+  const what = kind === "quote" ? "quote request" : "job application";
+  const subject = oneLine(`Website ${what} from ${oneLine(String(row.name ?? ""), 100) || "unknown"}`, 150);
+  const lines = [`New ${what} from the website.`, "", `Submitted: ${ukTime(new Date(row.created_at))}`, `Request ID: ${row.id}`, ""];
+  for (const [key, label] of ALERT_FIELDS[kind]) {
+    const value = typeof row[key] === "string" ? (row[key] as string).trim() : "";
+    if (value) lines.push(value.includes("\n") ? `${label}:\n${value}` : `${label}: ${value}`);
+  }
+
+  const paths = kind === "quote"
+    ? (Array.isArray(row.file_paths) ? (row.file_paths as unknown[]).filter((p): p is string => typeof p === "string") : [])
+    : (typeof row.file_path === "string" ? [row.file_path] : []);
+  if (paths.length) {
+    // Links are made at send time. A file that never uploaded gets a note instead of failing the alert.
+    const { data, error } = await db.storage.from(ALERT_BUCKETS[kind]).createSignedUrls(paths, ALERT_LINK_SECONDS);
+    if (error || !data) throw new AlertError("signed links failed");
+    lines.push("", `Files (links expire ${ukTime(new Date(Date.now() + ALERT_LINK_SECONDS * 1000))}):`);
+    for (const path of paths) {
+      const link = data.find((d) => d.path === path);
+      lines.push(`- ${path.slice(path.lastIndexOf("/") + 1)}`);
+      lines.push(`  ${link && !link.error && link.signedUrl ? link.signedUrl : "(link unavailable: the file may not have uploaded)"}`);
+    }
+  }
+
+  const email = typeof row.email === "string" ? row.email.trim() : "";
+  return { subject, body: lines.join("\n"), replyTo: ALERT_EMAIL_RE.test(email) ? email : null };
+}
+
+async function sendAlertEmail(alert: { subject: string; body: string; replyTo: string | null }) {
+  const from = alertEnv("ALERT_FROM");
+  const to = alertEnv("ALERT_TO");
+  const token = await getGraphToken();
+  const message: Record<string, unknown> = {
+    subject: alert.subject,
+    body: { contentType: "Text", content: alert.body },
+    toRecipients: [{ emailAddress: { address: to } }],
+  };
+  if (alert.replyTo) message.replyTo = [{ emailAddress: { address: alert.replyTo } }];
+  const res = await alertFetch(`https://graph.microsoft.com/v1.0/users/${encodeURIComponent(from)}/sendMail`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ message, saveToSentItems: false }),
+  });
+  if (res.status !== 202) throw new AlertError(`sendMail failed (${res.status})`);
+}
+
+// Sends one alert and records the attempt. Never throws. "disabled" means nothing was sent or recorded.
+async function notifyRow(db: SupabaseClient, kind: AlertKind, row: AlertRow): Promise<"sent" | "failed" | "disabled"> {
+  if (!alertsEnabled()) return "disabled";
+  const table = ALERT_TABLES[kind];
+  const attempts = (Number(row.notify_attempts) || 0) + 1;
+  try {
+    await sendAlertEmail(await buildAlert(db, kind, row));
+  } catch (err) {
+    const reason = err instanceof AlertError ? err.message : ((err as Error | null)?.name ?? "error");
+    console.error(`alert failed: ${kind} ${row.id} attempt ${attempts}: ${reason}`);
+    try {
+      await db.from(table).update({ notify_attempts: attempts }).eq("id", row.id);
+    } catch {
+      console.error(`alert attempt not recorded: ${kind} ${row.id}`);
+    }
+    return "failed";
+  }
+  try {
+    const { error } = await db.from(table).update({ notified_at: new Date().toISOString(), notify_attempts: attempts }).eq("id", row.id);
+    if (error) console.error(`alert sent but not recorded: ${kind} ${row.id} (${error.code ?? "db error"})`);
+  } catch {
+    console.error(`alert sent but not recorded: ${kind} ${row.id}`);
+  }
+  console.log(`alert sent: ${kind} ${row.id}`);
+  return "sent";
+}
+// ===== ALERT CODE END =====
+
 Deno.serve(async (req) => {
   const origin = req.headers.get("Origin");
   if (origin && !ALLOWED_ORIGINS.includes(origin)) return json({ error: "Not allowed" }, 403, origin);
@@ -229,8 +385,20 @@ Deno.serve(async (req) => {
     Object.assign(row, source);
     row.consent_given_at = new Date().toISOString();
 
-    const { error } = await supabase.from(TABLES[form]).insert(row);
-    if (error) throw error;
+    // The saved row comes back (id, created_at, notify_attempts) for the alert email.
+    const { data: saved, error } = await supabase.from(TABLES[form]).insert(row).select("*").single();
+    if (error || !saved) throw error ?? new Error("no row returned");
+
+    // Alert email. Only quote requests without files are sent from here: the browser uploads files after
+    // this response, so quotes with files and job applications (always a CV) are sent by alert-sweep once
+    // the upload has had time to finish. notifyRow never throws, so the visitor's response is unaffected,
+    // and waitUntil lets the response go first where the runtime supports it.
+    if (form === "quote" && uploads.length === 0) {
+      const task = notifyRow(supabase, "quote", saved as AlertRow);
+      const runtime = (globalThis as { EdgeRuntime?: { waitUntil(p: Promise<unknown>): void } }).EdgeRuntime;
+      if (runtime?.waitUntil) runtime.waitUntil(task);
+      else await task;
+    }
 
     return json({ uploads }, 200, origin);
   } catch (err) {
