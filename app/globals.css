@@ -89,6 +89,34 @@
   }
 }
 
+/* Tile hover (TileGrid on /capabilities and /industries): text lifts 6px and a light grey gradient fades in behind
+   the description. The image never moves and the layout never changes. Hover only on devices that can hover, so touch
+   screens never get a stuck state; :focus-within covers keyboard users once tiles are links.
+   Tiles are NOT links yet, so there is deliberately no cursor: pointer. When a tile gets an href, add cursor: pointer
+   to .tile (link variant) in the same change. Description text on the strongest grey (#eceef0): 5.97:1. */
+.tile-text { transition: transform 200ms ease-out; }
+.tile-desc { position: relative; isolation: isolate; }
+.tile-desc::before {
+  content: "";
+  position: absolute;
+  inset: -0.75rem -0.5rem -0.75rem;
+  z-index: -1;
+  border-radius: 0.5rem;
+  background: linear-gradient(to bottom, rgb(236 238 240 / 0), #eceef0);
+  opacity: 0;
+  transition: opacity 200ms ease-out;
+}
+@media (hover: hover) {
+  .tile:hover .tile-text { transform: translateY(-6px); }
+  .tile:hover .tile-desc::before { opacity: 1; }
+}
+.tile:focus-within .tile-text { transform: translateY(-6px); }
+.tile:focus-within .tile-desc::before { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  /* No movement; the gradient still fades in. */
+  .tile-text { transition: none; transform: none !important; }
+}
+
 @layer components {
   .container-page {
     @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
