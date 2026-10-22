@@ -139,15 +139,18 @@ export default function HeroCarousel() {
       </div>
 
       {/* Dark pill so the controls are visible on any photo; .on-dark gives them a white focus ring.
-          Pause/play sits at the left end at the same 10px scale as the dots (WCAG 2.2.2 needs a pause control). */}
-      <div className="on-dark absolute bottom-3 right-3 z-20 flex items-center rounded-full bg-black/60 p-1 text-white">
+          Pause/play sits at the left end at the same scale as the dots (WCAG 2.2.2 needs a pause control).
+          Drawn at 70% (31px slots, 7px dots, 3px padding: 130x37). Tap areas: each dot is its whole 31x31 slot
+          (WCAG 2.2 minimum is 24x24); pause/play stays 44x44 through -6.5px margins (it takes a 31x31 slot in the
+          layout) and sits on top, so the first dot still has 24.5px; its focus ring is pulled in to the drawn slot. */}
+      <div className="on-dark absolute bottom-3 right-3 z-20 flex items-center rounded-full bg-black/60 p-[3px] text-white">
         <button
           type="button"
           aria-label={playing ? "Pause image rotation" : "Play image rotation"}
           onClick={() => setUserPlaying(!playing)}
-          className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full"
+          className="relative z-10 -m-[6.5px] flex h-11 w-11 cursor-pointer items-center justify-center rounded-full focus-visible:outline-offset-[-4.5px]"
         >
-          <svg aria-hidden="true" viewBox="0 0 10 10" width="10" height="10" fill="currentColor">
+          <svg aria-hidden="true" viewBox="0 0 10 10" width="7" height="7" fill="currentColor">
             {playing ? <path d="M1.5 0h2.5v10H1.5zM6 0h2.5v10H6z" /> : <path d="M1.5 0l8 5-8 5z" />}
           </svg>
         </button>
@@ -158,9 +161,9 @@ export default function HeroCarousel() {
             aria-label={`Show image ${i + 1} of ${slides.length}`}
             aria-current={i === index ? "true" : undefined}
             onClick={() => show(i)}
-            className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full"
+            className="flex h-[31px] w-[31px] cursor-pointer items-center justify-center rounded-full"
           >
-            <span aria-hidden="true" className={`h-2.5 w-2.5 rounded-full border-2 border-white ${i === index ? "bg-white" : ""}`} />
+            <span aria-hidden="true" className={`h-[7px] w-[7px] rounded-full border-[1.5px] border-white ${i === index ? "bg-white" : ""}`} />
           </button>
         ))}
       </div>
