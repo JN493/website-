@@ -9,7 +9,7 @@
 //   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY - provided automatically
 //
 // Picks up quote requests and job applications with notified_at null, fewer than 5 attempts and
-// created more than 2 minutes ago (so the browser has finished uploading any files), newest first,
+// created more than 10 minutes ago (so the browser has finished uploading any files), newest first,
 // at most 20 per run. Each try increments notify_attempts; success sets notified_at.
 // Returns counts only. Needs supabase/alerts.sql to have been run first.
 
@@ -17,7 +17,7 @@ import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 
 const MAX_PER_RUN = 20;
 const MAX_ATTEMPTS = 5;
-const MIN_AGE_MS = 2 * 60 * 1000;
+const MIN_AGE_MS = 10 * 60 * 1000; // wait 10 minutes before sending, so any file upload has finished
 // Stop starting new emails after this long, so a slow run (10s timeouts) ends well inside the
 // Edge Function time limit; anything left over is picked up by the next run.
 const TIME_BUDGET_MS = 100_000;

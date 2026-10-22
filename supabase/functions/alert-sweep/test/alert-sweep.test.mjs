@@ -44,8 +44,8 @@ function freshState() {
   state = { tables: { quote_requests: [], job_applications: [], brochure_requests: [] }, storage: { "quote-files": new Set(), "cv-files": new Set() }, failPaths: new Set(), requests: [] };
   return state;
 }
-const quoteRow = (id, extra = {}) => ({ id, created_at: minutesAgo(10), notified_at: null, notify_attempts: 0, name: "Jane Testperson", company: "Testco Fabrication Ltd", location: "Hailsham", phone: "07700 900123", email: "jane.testperson@example.invalid", need_by: "", project_details: "Brackets", submission_description: "", file_paths: [], ...extra });
-const appRow = (id, extra = {}) => ({ id, created_at: minutesAgo(10), notified_at: null, notify_attempts: 0, name: "Sam Applicant", email: "sam.applicant@example.invalid", file_path: `f-${id}/Sam_CV.pdf`, ...extra });
+const quoteRow = (id, extra = {}) => ({ id, created_at: minutesAgo(20), notified_at: null, notify_attempts: 0, name: "Jane Testperson", company: "Testco Fabrication Ltd", location: "Hailsham", phone: "07700 900123", email: "jane.testperson@example.invalid", need_by: "", project_details: "Brackets", submission_description: "", file_paths: [], ...extra });
+const appRow = (id, extra = {}) => ({ id, created_at: minutesAgo(20), notified_at: null, notify_attempts: 0, name: "Sam Applicant", email: "sam.applicant@example.invalid", file_path: `f-${id}/Sam_CV.pdf`, ...extra });
 
 async function sweep(headers = { "x-alert-secret": SECRET }) {
   const res = await handler(new Request("http://local/functions/v1/alert-sweep", { method: "POST", headers }));
@@ -162,9 +162,9 @@ await test("backfilled rows (notified_at already set) are never sent", async () 
   assert.equal(graph.sendAttempts, 0);
 });
 
-await test("rows under 2 minutes old are left alone (their files may still be uploading)", async () => {
-  state.tables.quote_requests.push(quoteRow("q-new", { created_at: minutesAgo(1) }));
-  state.tables.quote_requests.push(quoteRow("q-ready", { created_at: minutesAgo(3) }));
+await test("rows under 10 minutes old are left alone (their files may still be uploading)", async () => {
+  state.tables.quote_requests.push(quoteRow("q-new", { created_at: minutesAgo(9) }));
+  state.tables.quote_requests.push(quoteRow("q-ready", { created_at: minutesAgo(11) }));
   const r = await sweep();
   assert.equal(r.body.due, 1);
   assert.equal(state.tables.quote_requests.find((q) => q.id === "q-new").notify_attempts, 0);
@@ -173,7 +173,7 @@ await test("rows under 2 minutes old are left alone (their files may still be up
 
 await test("invalid email in the row: no Reply-To at all", async () => {
   for (const [i, email] of ["not-an-email", "two@@example.invalid", "a b@example.invalid", "x@y.z\r\nBcc: v@example.invalid", ""].entries()) {
-    state.tables.quote_requests.push(quoteRow(`q${i}`, { email, created_at: minutesAgo(10 + i) }));
+    state.tables.quote_requests.push(quoteRow(`q${i}`, { email, created_at: minutesAgo(20 + i) }));
   }
   const r = await sweep();
   assert.equal(r.body.sent, 5);
@@ -189,8 +189,8 @@ await test("CR/LF in a stored name cannot inject headers", async () => {
 });
 
 await test("at most 20 per run, newest first; the rest are left for the next run", async () => {
-  for (let i = 0; i < 15; i++) state.tables.quote_requests.push(quoteRow(`q${String(i).padStart(2, "0")}`, { created_at: minutesAgo(10 + i * 2) }));
-  for (let i = 0; i < 10; i++) state.tables.job_applications.push(appRow(`j${String(i).padStart(2, "0")}`, { created_at: minutesAgo(11 + i * 2), file_path: null }));
+  for (let i = 0; i < 15; i++) state.tables.quote_requests.push(quoteRow(`q${String(i).padStart(2, "0")}`, { created_at: minutesAgo(20 + i * 2) }));
+  for (let i = 0; i < 10; i++) state.tables.job_applications.push(appRow(`j${String(i).padStart(2, "0")}`, { created_at: minutesAgo(21 + i * 2), file_path: null }));
   const r = await sweep();
   assert.equal(r.body.sent, 20);
   assert.equal(r.body.left_for_next_run, r.body.due - 20);
