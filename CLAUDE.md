@@ -15,7 +15,7 @@ SLS Fabrications is a welding and steel fabrication workshop based in Hailsham, 
 Build the company website now, and later an internal workshop efficiency app (Supabase backend). Next.js (App Router) + Tailwind, static export.
 
 ## Project status (2026-10-22)
-As recorded by the developer on 2026-10-22. Some older sections below predate it and have not been reconciled yet; where they disagree, ask before acting.
+As recorded by the developer on 2026-10-22. This section is the source of truth; the older sections below were reconciled with it on 2026-10-22. If anything still disagrees, ask before acting.
 
 Working rules for future sessions
 - Do not push unless the developer asks.
@@ -152,7 +152,7 @@ Open items before launch
 - `contacts` and `upsert_contact()` are locked down (RLS on, no policies, no privileges for anon/authenticated). `supabase/lock-down-checks.sql` covers them.
 - Run order for this change: (1) run `supabase/add-source-and-contacts.sql` in the Supabase SQL Editor, (2) deploy the updated `submit-form` function, (3) push the site. Pushing the site before steps 1 and 2 will make the quote and brochure forms fail. (Deploying the function before step 1 also breaks them, as it writes the new columns and calls `upsert_contact()`.)
 
-### Retention clean-up (code written 2026-10-14, not deployed)
+### Retention clean-up (deployed in Supabase, runs daily at 03:30 UTC in dry-run mode, real deletion off)
 - Edge Function `retention-cleanup` (`supabase/functions/retention-cleanup/index.ts`, Verify JWT OFF, service role). Every call must send the `x-retention-secret` header matching the function secret `RETENTION_CLEANUP_SECRET` (never in the repo).
 - Rules (Rob's decisions), as constants at the top of the function (`RETENTION_MONTHS`, all 12): quote_requests 12 months after the linked contact's `last_seen_at` (row's `created_at` if no contact); brochure_requests 12 months after `sent_at` (`created_at` if never sent); job_applications 12 months after `created_at`; contacts 12 months after `last_seen_at` AND only when no quote or brochure request references them.
 - Two phases per run. PLAN: every lookup, paged (`LOOKUP_PAGE_SIZE` = 100) so no batch limit can hide rows; if any lookup fails the run stops before deleting anything and `retention_log.error` records the step and error code. DELETE: files first (Storage API `remove`, then checked with `list`; already-missing counts as success), then the row; if a file cannot be deleted the row stays and is retried next run. Contacts last.
@@ -160,7 +160,7 @@ Open items before launch
 - DRY RUN by default: only `RETENTION_DELETE_ENABLED=true` really deletes. Kill switch: `RETENTION_KILL_SWITCH=on`. Cap: `MAX_DELETES_PER_TABLE_PER_RUN` = 100.
 - `retention_log` (`supabase/retention.sql`): run time, dry_run, killed, per-table counts (would_delete / deleted / failed / skipped / more_remaining), and `error` (step name and code) when a run stopped. No personal data. RLS on, no policies, revoked from anon/authenticated; covered by `supabase/lock-down-checks.sql`.
 - The `contact_id` foreign keys have no ON DELETE action (NO ACTION), so a referenced contact can never be deleted and nothing cascades.
-- Schedule: `supabase/retention-schedule.sql` (pg_cron + pg_net, secret in Vault, daily 03:30 UTC). NOT run automatically.
+- Schedule: `supabase/retention-schedule.sql` (pg_cron + pg_net, secret in Vault, daily 03:30 UTC), deployed and running in dry-run mode. To stop it: `select cron.unschedule('retention-cleanup-daily');` (also noted at the end of that file).
 - Tests: `node supabase/functions/retention-cleanup/test/retention.test.mjs` (in-memory fake Supabase, no network). Real-project dry run: `supabase/retention-test-seed.sql` then `supabase/retention-test-remove.sql` (rows marked retention-test-...@example.invalid).
 
 ## Site structure (agreed)
@@ -181,14 +181,14 @@ Five pages: **About, Capabilities, Industries, Projects, Contact** (no "Our" pre
 - Detail pages (`app/capabilities/[slug]`) are NOT built: Next.js static export fails on a dynamic route with no routes. Add the template back when the first capability has real content and is marked ready, and make the Capabilities page pass an `href` for ready items in the same change.
 - To add a photo: put it in `public/images/capabilities/<slug>.jpg` (resize first, phone photos are several MB), set `image`, set `ready: true` when the detail page has content.
 - Order: On-Site Surveying, CAD Design, Laser Cutting, Punching, Folding, Rolling, Tube Bending, CNC Machining, Welding, Finishing, Powder Coating, Delivery.
-- Copy is signed off by the developer. Use it word for word from `src/lib/capabilities.ts`. Laser Cutting, CNC Machining and Powder Coating copy was drafted from the old Partner Services paragraph with no specifics and approved on 2026-10-08. Do not mention "partner" in the tile copy (the developer will cover it on a detail page later). Finishing's block title was shortened to "Finishing" and its description names polishing, galvanisation and chemical oxidation.
+- The current copy (signed off by the developer) is kept word for word from `src/lib/capabilities.ts` until the consultant's copy replaces it. It is not final; do not rewrite it in between. Laser Cutting, CNC Machining and Powder Coating copy was drafted from the old Partner Services paragraph with no specifics and approved on 2026-10-08. Do not mention "partner" in the tile copy (the developer will cover it on a detail page later). Finishing's block title was shortened to "Finishing" and its description names polishing, galvanisation and chemical oxidation.
 
 ## Brochure download (Projects page)
 - Built 2026-10-08: the form collects only an email address with a REQUIRED consent checkbox, and inserts a row into `brochure_requests`. The thank-you says "Thanks, we'll send you the brochure shortly." Nothing is emailed yet and no PDF exists.
 - Still to build: emailing the brochure PDF (sets `sent_at`). The PDF does not exist yet, so build it so the file can be dropped in later.
-- Needs an email-sending service and a Supabase Edge Function (sending cannot happen from a static site). Sending domain needs SPF and DKIM records in Cloudflare DNS. A domain can have only ONE SPF record, so it must be merged with Microsoft 365's (`include:spf.protection.outlook.com`).
+- Needs an email-sending service and a Supabase Edge Function (sending cannot happen from a static site). Sending domain needs SPF and DKIM records in Cloudflare DNS. A domain can have only ONE SPF record, shared with Microsoft 365, so any SPF change must be reviewed before it is made.
 - Consent wording must be decided (see open items). Marketing/mailing list consent should be a separate unticked box and the brochure must not depend on it.
-- Cannot go live on the real domain until ICO registration is done and the Privacy Policy covers it.
+- Cannot go live on the real domain until the Privacy Policy covers it.
 
 ## Design direction
 - Rejected: dark, heavy industrial theme.
@@ -218,24 +218,26 @@ Five pages: **About, Capabilities, Industries, Projects, Contact** (no "Our" pre
 ## Style and voice notes (explicit feedback from the developer)
 - Accuracy first. Check facts or ask before adding details. Never invent specifics (materials, capacity, certifications, client names).
 - Do not add content that wasn't asked for. Make small edits to existing copy, do not rewrite wholesale.
-- Avoid em dashes in body copy (fine in headings). Avoid repeating phrases like "your project" across sections. Plain, concise tone. Must not read as AI-generated.
+- No em dashes in site copy, headings included. (Code comments are not site copy.) Avoid repeating phrases like "your project" across sections. Plain, concise tone. Must not read as AI-generated.
 - Client company names must not be published without explicit permission.
 
 ## Legal and compliance status
-- Privacy Policy, Terms of Use, Cookie Policy: approved text live since 2026-10-08 ("Last updated: 8 October 2026"), word for word in `app/privacy`, `app/terms`, `app/cookies`. The Privacy Policy deliberately shows "ICO registration number: [add once registered]" until ICO registration is done. Privacy Policy updated 2026-10-09 ("Last updated: 9 October 2026") with the "Where you found us." paragraph and the one-contact-record sentence. They state: no analytics or advertising, the site sets no cookies of its own, Supabase database in London, Turnstile on the forms, Google Maps only after a click, 12-month retention for quote, brochure and CV data. Any change to the site that affects these (analytics, new services, cookies, retention) needs the policies updated first.
+- Privacy Policy, Terms of Use, Cookie Policy: approved text live since 2026-10-08 ("Last updated: 8 October 2026"), word for word in `app/privacy`, `app/terms`, `app/cookies`. The Privacy Policy still shows "ICO registration number: [add once registered]" until the policy rewrite. Privacy Policy updated 2026-10-09 ("Last updated: 9 October 2026") with the "Where you found us." paragraph and the one-contact-record sentence. They state: no analytics or advertising, the site sets no cookies of its own, Supabase database in London, Turnstile on the forms, Google Maps only after a click, 12-month retention for quote, brochure and CV data. Any change to the site that affects these (analytics, new services, cookies, retention) needs the policies updated first.
 - Privacy Policy changes to bundle later (not yet in the policy text): quote requests now also hold an optional "need by" note and an optional company location (town or area), kept and deleted with the request (12 months after last contact).
-- Company is NOT yet registered with the ICO. This must be done before any live data collection (quote form, brochure, analytics) on the real domain.
-- Analytics: undecided. The developer leans Google Analytics for now; Rachael to confirm. Google Analytics needs a consent banner before go-live (UK PECR). Plausible/Fathom were the alternatives (no cookie banner). Cookiebot and Google Tag Manager are in the code (2026-10-21); the Privacy Policy and Cookie Policy ("stores nothing in the browser", no analytics) are now out of date and must be updated before this goes live.
+- The company is registered with the ICO, number ZC269397 (to be checked against the certificate and the ICO register). The number goes into the Privacy Policy in the policy rewrite.
+- Analytics: GA4 runs through Google Tag Manager (container GTM-M995FM9J, published) behind Cookiebot consent; details in Project status. The Privacy Policy and Cookie Policy ("stores nothing in the browser", no analytics) are out of date and must be updated before go-live.
 
-## Microsoft 365 email (blocked)
+## Microsoft 365 email (staying; admin access being set up)
 - The company has an existing Microsoft 365 subscription but the developer's login is a normal user, not an admin ("account doesn't have permission"). Needs a Global Admin login from Rob or the IT provider.
-- Plan once admin access exists: add and verify slsfabrications.com in Microsoft, add DNS records in Cloudflare (TXT verification, MX to `slsfabrications-com.mail.protection.outlook.com` priority 0, CNAME `autodiscover` to `autodiscover.outlook.com` set to DNS only, SPF TXT `v=spf1 include:spf.protection.outlook.com -all`), create `info@slsfabrications.com` as a shared mailbox, test send and receive. DKIM and DMARC later.
+- Email stays on Microsoft 365; Google Workspace was dropped.
+- Plan once admin access exists: add and verify slsfabrications.com in Microsoft (TXT verification record in Cloudflare DNS), CNAME `autodiscover` to `autodiscover.outlook.com` set to DNS only, create `info@slsfabrications.com` as a shared mailbox, test send and receive, enable DKIM. DMARC later.
+- Do not add or change MX or SPF records until they have been reviewed.
 - Do not change nameservers (the domain is already on Cloudflare). Do not touch the two website CNAMEs until the Worker is attached.
 
 ## Working agreements
 - The developer pastes between Claude (chat, plans and prompts) and Claude Code (implementation). Claude Code does the code, tests in a real browser, and reports back.
 - Commit with clear messages. Run lint and `npm run build` before reporting. Do not add dependencies without asking.
-- Pushing to `main` is allowed without asking while slsfabrications.com is NOT attached to the Worker (agreed 2026-10-08). Once the domain is attached, go back to asking before every push.
+- Do not push unless the developer asks (from 2026-10-22; replaces the earlier rule that allowed pushing to `main` without asking before the domain was attached).
 - Keep this file and `sls-content-draft.md` up to date as work happens, but only with changes that are certain (done, tested, or explicitly decided). Do not record guesses or unconfirmed plans as fact.
 - Test on a real phone when possible (an iPhone 7 Plus caught a bug that simulated testing missed).
 - Past issue (resolved): duplicate `app` folders (`src/app/` and root `app/`) broke routing. All pages live in the root `app/`. Shared components are in `src/components/`.
@@ -244,12 +246,11 @@ Five pages: **About, Capabilities, Industries, Projects, Contact** (no "Our" pre
 - Home hero uses TEST IMAGES (marked "TEST IMAGE: replace before launch" in `src/components/HeroCarousel.tsx`; credits in `design-assets/SOURCES.md`). The team photo (Bhupathi Srinu) and the laser photo (Clayton Cardinalli) are Unsplash test images, and the team photo is NOT SLS staff. The welding photo is SLS's own but only 382x510; a full-size original is needed.
 
 ## Open items
-- Rob: Microsoft admin login, ICO registration, mission statement, workshop photos, sector name wording, permission to name any clients, brochure PDF.
-- Rachael: analytics decision (Google Analytics with banner, or Plausible). Asked 2026-10-08. Key deciding question put to her: is paid advertising (Google Ads) planned? Also proposed an optional "How did you hear about us?" field on the quote form (not yet agreed), plus Google Search Console and Google Business Profile.
+- Rob: Microsoft admin login, mission statement, workshop photos, sector name wording, permission to name any clients, brochure PDF.
+- Rachael: proposed an optional "How did you hear about us?" field on the quote form (not yet agreed), plus Google Search Console and Google Business Profile.
 - Rob: asked 2026-10-08 about recovering the company Facebook page.
-- Supabase / Turnstile (in this order): create the `submit-form` function in the dashboard and paste the code, set the `TURNSTILE_SECRET_KEY` secret, add `NEXT_PUBLIC_TURNSTILE_SITE_KEY` to the Cloudflare build variables, push, test all three forms on the preview, then run `supabase/save-current-policies.sql` (keep the result), `supabase/lock-down-direct-inserts.sql` and `supabase/lock-down-checks.sql`, and test again.
-- Add the ICO registration number to the Privacy Policy once registered.
+- Lock-down (not recorded as done in Project status; confirm before acting): run `supabase/save-current-policies.sql` (keep the result), `supabase/lock-down-direct-inserts.sql` and `supabase/lock-down-checks.sql` (all queries return no rows, the contacts check returns relrowsecurity = true), then one real test per form. Already done and covered by Project status: `submit-form` with Turnstile, the site key build variable, the source columns and the contacts table.
+- Add the ICO registration number (ZC269397, once checked) to the Privacy Policy as part of the policy rewrite.
 - Quote fields need_by and location (in this order): (1) run `supabase/quote-fields.sql` in the SQL Editor, (2) redeploy the `submit-form` function, (3) push the site. Deploying the function before step 1 makes every quote fail (it inserts the new columns).
-- Tracking and contacts (in this order): run `supabase/add-source-and-contacts.sql`, deploy the updated `submit-form` function, then push the site; then one real test per form and run `supabase/lock-down-checks.sql` (all queries return no rows, the last returns relrowsecurity = true).
-- Retention clean-up (in this order): run `supabase/retention.sql`; deploy `retention-cleanup` (Verify JWT off) with secret `RETENTION_CLEANUP_SECRET`; run `supabase/retention-test-seed.sql`, call the function once (dry run), check `retention_log`, run `supabase/retention-test-remove.sql`; then `supabase/retention-schedule.sql`; set `RETENTION_DELETE_ENABLED=true` only when the dry-run counts look right.
+- Retention clean-up (deployed, dry run): still open are the real-deletion test with fake rows and, before about October 2027, reviewing `retention_log` and setting `RETENTION_DELETE_ENABLED=true` only when the dry-run counts look right.
 - Build: brochure emailing, Projects case studies, About page, homepage, attach domain to Worker, retire the old Netlify site.
