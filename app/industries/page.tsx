@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import TileGrid from "@/components/TileGrid";
 import PageHeader from "@/components/PageHeader";
+import { industries } from "@/lib/industries";
 
 export const metadata: Metadata = {
   title: "Industries We Serve | SLS Fabrications, Hailsham",
@@ -8,27 +10,23 @@ export const metadata: Metadata = {
   alternates: { canonical: "/industries" },
 };
 
-const industries = [
-  "Airport maintenance",
-  "Water & wastewater",
-  "Spas & health clubs",
-  "Pharmaceutical",
-  "Exhibitions & events",
-  "Commercial & cladding",
-  "Office & restaurant fit-outs",
-  "Vehicle repairs",
-  "Pumps & shrouds",
-  "Architectural",
-  "Defence & security",
-  "Signage",
-];
-
 export default function Industries() {
   return (
     <main id="main">
-      <PageHeader title="Industries" />
+      <PageHeader title="Industries">
+        <p>
+          SLS Fabrications works across a broad range of industries, manufacturing everything from engineered components and industrial equipment to architectural metalwork and custom installations.
+        </p>
+        <p className="mt-3">Explore some of the sectors we work in and contact us to discuss your project today.</p>
+      </PageHeader>
       <div className="container-page py-12 sm:py-16">
-      <TileGrid tiles={industries.map((title) => ({ title }))} />
+        <TileGrid tiles={industries.map((i) => ({ title: i.title, description: i.subtitle }))} />
+        {/* /contact#quote opens the quote form (app/contact/page.tsx reads the hash). */}
+        <div className="mt-14">
+          <Link href="/contact#quote" className="btn btn-primary">
+            Request a Quote <span aria-hidden="true">→</span>
+          </Link>
+        </div>
       </div>
     </main>
   );
