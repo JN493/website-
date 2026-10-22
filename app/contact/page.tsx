@@ -92,8 +92,10 @@ export default function Contact() {
         {
           name: text("name"),
           company: text("company"),
+          location: text("location"),
           phone: text("phone"),
           email: text("email"),
+          need_by: text("need_by"),
           project_details: text("project_details"),
           submission_description: text("submission_description"),
           consent,
@@ -213,6 +215,11 @@ export default function Contact() {
           </label>
 
           <label className="flex flex-col gap-1">
+            <span className="field-label">Location (town or area) (optional)</span>
+            <input name="location" type="text" maxLength={100} className="field" />
+          </label>
+
+          <label className="flex flex-col gap-1">
             <span className="field-label">Phone</span>
             <input name="phone" type="tel" required maxLength={50} className="field" />
           </label>
@@ -221,6 +228,12 @@ export default function Contact() {
             <span className="field-label">Email</span>
             <input name="email" type="email" required maxLength={200} className="field" />
           </label>
+
+          <div className="flex flex-col gap-1">
+            <label htmlFor="quote-need-by" className="field-label">Need by (optional)</label>
+            <input id="quote-need-by" name="need_by" type="text" maxLength={100} aria-describedby="need-by-hint" className="field" />
+            <span id="need-by-hint" className="text-sm text-muted">For example, ASAP or end of November</span>
+          </div>
 
           <label className="flex flex-col gap-1">
             <span className="field-label">Project details (optional)</span>
