@@ -110,7 +110,9 @@ export default function HeroCarousel() {
               <img
                 src={`/images/hero/${slide.name}-${slide.widths.at(-1)}.webp`}
                 srcSet={slide.widths.map((w) => `/images/hero/${slide.name}-${w}.webp ${w}w`).join(", ")}
-                sizes="(min-width: 1152px) 1088px, calc(100vw - 2rem)"
+                // The displayed width: the page column (--page-max 72rem) less its gutters (1rem, 1.5rem from 40rem,
+                // 2rem from 64rem), so the browser picks the smallest file that covers it.
+                sizes="(min-width: 72rem) 1088px, (min-width: 64rem) calc(100vw - 4rem), (min-width: 40rem) calc(100vw - 3rem), calc(100vw - 2rem)"
                 width={slide.width}
                 height={slide.height}
                 alt={slide.alt}

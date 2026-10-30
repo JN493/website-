@@ -35,12 +35,12 @@ type Ctl = {
 
 // 4:3 image box, steel-grey when there's no photo, with the title overlaid bottom-left (a span: no headings
 // inside buttons). Plain rgba gradient (not Tailwind's gradient utilities) so it renders on older iOS Safari.
-function ImageBox({ title, image, titleId }: { title: string; image?: string; titleId: string }) {
+function ImageBox({ title, image }: { title: string; image?: string }) {
   return (
     <div className="relative aspect-[4/3] shrink-0 overflow-hidden rounded-lg bg-steel">
       {image && <Image src={image} alt="" fill sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" className="object-cover" />}
       <div className="absolute inset-x-0 bottom-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.7),rgba(0,0,0,0))] px-4 pb-3 pt-12">
-        <span id={titleId} className="tile-text block text-lg font-semibold text-white">{title}</span>
+        <span className="tile-text block text-lg font-semibold text-white">{title}</span>
       </div>
     </div>
   );
@@ -144,17 +144,17 @@ export default function PopupTiles({ items }: { items: PopupItem[] }) {
                 ctl.current.tiles[c.slug] = el;
               }}
               aria-haspopup="dialog"
-              aria-labelledby={`tile-${c.slug}-name`}
-              aria-describedby={`tile-${c.slug}-sub`}
+              // No aria-labelledby: the button's name is its visible text (title then subtitle), so the spoken name
+              // matches what is on screen (WCAG 2.5.3 Label in Name).
               onClick={() => showDialog(ctl.current, c.slug, true)}
               // Flex column, not block: a <button> centres its contents vertically when it is taller than them,
               // which pushed the image down on blocks with less text. The text area (.tile-desc, which carries the
               // grey hover gradient) fills the rest, so every block's image and hover box line up and match in size.
               className="tile flex h-full w-full cursor-pointer flex-col rounded-lg text-left"
             >
-              <ImageBox title={c.title} image={c.image} titleId={`tile-${c.slug}-name`} />
+              <ImageBox title={c.title} image={c.image} />
               <span className="tile-desc mt-4 block flex-1">
-                <span id={`tile-${c.slug}-sub`} className="tile-text block text-muted">{c.subtitle}</span>
+                <span className="tile-text block text-muted">{c.subtitle}</span>
               </span>
             </button>
           </Reveal>

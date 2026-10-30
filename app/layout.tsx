@@ -51,6 +51,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       {/* Order matters (Cookiebot, "Google Tag Manager and Automatic cookie blocking"): Consent Mode defaults,
           then Tag Manager, then Cookiebot. Cookiebot is in manual mode (no data-blockingmode="auto"). */}
       <head>
+        {/* Early connections, ONLY to hosts every page already contacts before any consent (checked 2026-10-30): the
+            Cookiebot script, its config and frame host, and the Tag Manager script. No hints for Google Analytics or
+            any host used only after consent. These change nothing about how or when the scripts below load. */}
+        <link rel="preconnect" href="https://consent.cookiebot.com" />
+        <link rel="preconnect" href="https://consentcdn.cookiebot.com" />
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
         <script data-cookieconsent="ignore" dangerouslySetInnerHTML={{ __html: consentDefaults }} />
         <script data-cookieconsent="ignore" dangerouslySetInnerHTML={{ __html: tagManager }} />
         {/* Synchronous on purpose, as in Cookiebot's article, so it runs before the page's own scripts. */}
