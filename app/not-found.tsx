@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
+import LaserNumerals from "@/components/LaserNumerals";
 import { pageMetadata } from "@/lib/pageMetadata";
 
 // No path: the 404 page has no canonical or og:url (Next.js adds noindex).
@@ -12,6 +13,10 @@ export const metadata: Metadata = pageMetadata({
 export default function NotFound() {
   return (
     <main id="main">
+      {/* Decorative "laser-cut" 404 (aria-hidden, plays once, still with reduced motion). */}
+      <div className="container-page pt-10 pb-8 sm:pt-12">
+        <LaserNumerals />
+      </div>
       <PageHeader title="Page not found">
         <p>The page you&apos;re looking for doesn&apos;t exist or has moved.</p>
       </PageHeader>
