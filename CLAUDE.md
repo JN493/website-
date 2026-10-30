@@ -14,8 +14,8 @@ SLS Fabrications is a welding and steel fabrication workshop based in Hailsham, 
 ## Project goal
 Build the company website now, and later an internal workshop efficiency app (Supabase backend). Next.js (App Router) + Tailwind, static export.
 
-## Project status (2026-10-22)
-As recorded by the developer on 2026-10-22. This section is the source of truth; the older sections below were reconciled with it on 2026-10-22. If anything still disagrees, ask before acting.
+## Project status (2026-10-30)
+As recorded by the developer on 2026-10-30. This section is the source of truth; the older sections below were reconciled with it on 2026-10-22. If anything still disagrees, ask before acting.
 
 Working rules for future sessions
 - Do not push unless the developer asks.
@@ -55,7 +55,7 @@ Done
 
 Decisions
 - Cookiebot stays; CookieYes was rejected.
-- Email stays on Microsoft 365; Google Workspace was dropped. An admin account is being set up properly. info@slsfabrications.com does not exist yet and must be working before launch.
+- Email stays on Microsoft 365; Google Workspace was dropped. The Microsoft side was set up by another IT person on 2026-10-30; its exact state is NOT confirmed (see "Microsoft 365 email"). info@slsfabrications.com must be working before launch.
 - Hero images: the team and laser photos are Unsplash TEST images; the welding photo is SLS's own but low resolution.
 - Copy is placeholder until the consultant writes it. The consultant's copy is now in for Capabilities, Industries, About and the home hero (2026-10-22).
 - Home tagline: "Sheet metal and welding specialists, bespoke service & designs from small to large scale projects." ("Steel shaped to spec" was removed.) Since 2026-10-22 it is only the home meta description; it is no longer shown on the page (the hero slides carry the text).
@@ -102,13 +102,18 @@ Open items: see the single list in "Open items" at the end of this file.
 - Row Level Security: anon can insert only (and only with consent recorded). No public read.
 - Env vars `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `NEXT_PUBLIC_TURNSTILE_SITE_KEY` live in local `.env.local` (git-ignored) and must also be in the Cloudflare build variables (baked in at build time). Never use or commit the service_role key or the Turnstile secret.
 - Shared client in `src/lib/supabase.ts`.
-- Tables `brochure_requests` (id, email, consent_given_at, created_at, sent_at nullable) and `job_applications` (id, name, email, file_path, consent_given_at, created_at), plus private bucket `cv-files` (5 MB, PDF/Word only). Defined in `supabase/brochure-and-careers.sql`, same insert-only RLS pattern as `quote_requests`. Written 2026-10-08; the developer runs it in the Supabase SQL Editor. Until it has been run, the brochure and careers forms show their error message.
+- Tables `brochure_requests` (id, email, consent_given_at, created_at, sent_at nullable) and `job_applications` (id, name, email, file_path, consent_given_at, created_at), plus private bucket `cv-files` (5 MB, PDF/Word only). Defined in `supabase/brochure-and-careers.sql`, same insert-only RLS pattern as `quote_requests`. Both tables exist in production. The careers form was tested end to end on 2026-10-22 (a test CV saved a row and a file, then both were deleted). The brochure form has not been tested end to end recently.
 - Spam protection on all three forms (quote, brochure, careers): hidden honeypot field named `website`, and a minimum fill time of 2 seconds. Shared helpers in `src/components/SpamGuard.tsx` (`Honeypot`, `useShownAt`, `looksLikeBot`). Bots see the normal thank-you message but nothing is uploaded or saved.
 
 ### Form submissions: Turnstile + Edge Function (code written 2026-10-08)
 - All three forms submit through `src/lib/submitForm.ts`, which calls the Supabase Edge Function `submit-form` (`supabase/functions/submit-form/index.ts`, pasted into the dashboard editor). The forms no longer insert into tables or upload to storage with the anon client.
 - Cloudflare Turnstile widget: `src/components/Turnstile.tsx` (explicit render, script from challenges.cloudflare.com, widget mode set to Managed in the Cloudflare dashboard). Site key 0x4AAAAAAFRSxpEQGtGG0m1N (public). Submit is blocked with a message until a token exists; the widget resets after every submission (tokens are single use).
-- The function checks origin (slsfabrications.com, www, website.robstonesls77.workers.dev, localhost:3000), honeypot, verifies the token with Cloudflare siteverify using the Supabase secret `TURNSTILE_SECRET_KEY`, validates fields, consent and files server-side (quote: optional, up to 10 files, 20 MB each, also checked in the browser on the Contact page with messages; careers: exactly one .pdf/.doc/.docx up to 5 MB), creates signed upload URLs, inserts the row with the service role and sets `consent_given_at` itself. The browser then uploads files to the signed URLs.
+- Live-domain check (2026-10-30):
+  - The allowed origins are a constant in the code, `ALLOWED_ORIGINS` in `supabase/functions/submit-form/index.ts` (not a secret): https://slsfabrications.com, https://www.slsfabrications.com, https://website.robstonesls77.workers.dev and http://localhost:3000. CORS echoes the request's origin only when it is on that list (`Vary: Origin`); any other origin gets 403.
+  - The function is pasted into the Supabase dashboard by hand, so checking that the deployed copy matches the repo is not recorded as done.
+  - A request with no Origin header passes the origin check but still needs a valid Turnstile token and an empty honeypot.
+  - Turnstile hostnames are set in the Cloudflare dashboard (the function does not check the hostname in Cloudflare's reply). Adding slsfabrications.com there is not recorded as done.
+- The function checks origin, honeypot, verifies the token with Cloudflare siteverify using the Supabase secret `TURNSTILE_SECRET_KEY`, validates fields, consent and files server-side (quote: optional, up to 10 files, 20 MB each, also checked in the browser on the Contact page with messages; careers: exactly one .pdf/.doc/.docx up to 5 MB), creates signed upload URLs, inserts the row with the service role and sets `consent_given_at` itself. The browser then uploads files to the signed URLs.
 - Quote only: `need_by` and `location` are optional, trimmed, stored as null when empty or whitespace-only, rejected over 100 characters (same "could not be accepted" error as other fields). Brochure and careers ignore them. Like the other text fields, there is no extra control-character filtering (trim and length only).
 - Tests: `node supabase/functions/submit-form/test/submit-form.test.mjs` (shares the in-memory fake in `supabase/functions/retention-cleanup/test/fake-supabase.mjs`; Turnstile answered locally, no network).
 - Known limitation: the row is saved before the files upload, so a failed upload can leave a row without its file.
@@ -143,7 +148,7 @@ Open items: see the single list in "Open items" at the end of this file.
 - Tests: `node supabase/functions/retention-cleanup/test/retention.test.mjs` (in-memory fake Supabase, no network). Real-project dry run: `supabase/retention-test-seed.sql` then `supabase/retention-test-remove.sql` (rows marked retention-test-...@example.invalid).
 
 ### Alert emails for quotes and job applications (deployed in production 2026-10-22, switched off)
-- Production status: on 2026-10-22 `supabase/alerts.sql` was run, `submit-form` and `alert-sweep` were deployed (`alert-sweep` with Verify JWT off), and the secrets were added with placeholder Microsoft values. `ALERTS_ENABLED` is NOT set. Tested with a test quote, a quote with a file and a CV: rows saved, `notified_at` empty, `notify_attempts` 0, no errors; the test rows and files were deleted; waiting counts 0. Not tested: the real Microsoft Graph call. Blocked on Microsoft (licence, admin access, info@, app registration).
+- Production status: on 2026-10-22 `supabase/alerts.sql` was run, `submit-form` and `alert-sweep` were deployed (`alert-sweep` with Verify JWT off), and the secrets were added with placeholder Microsoft values. `ALERTS_ENABLED` is NOT set. Tested with a test quote, a quote with a file and a CV: rows saved, `notified_at` empty, `notify_attempts` 0, no errors; the test rows and files were deleted; waiting counts 0. Not tested: the real Microsoft Graph call. Blocked on confirming the Microsoft details (see "Microsoft 365 email").
 - Each quote request and job application emails info@ (`ALERT_TO`, one recipient) with the full details. Brochure requests are NOT included: brochure alerts and brochure sending are not built yet.
 - Sending: Microsoft Graph, client credentials flow with fetch only (no SDK): token from `login.microsoftonline.com/{GRAPH_TENANT_ID}/oauth2/v2.0/token`, then `POST /v1.0/users/{ALERT_FROM}/sendMail` with `saveToSentItems: false`. 10 second timeouts. Off unless `ALERTS_ENABLED` is exactly `true`: while off nothing is sent and no attempt is counted.
 - Email: plain text. From `ALERT_FROM`, to `ALERT_TO`, Reply-To the enquirer only if the address passes validation. Subject "Website quote request from {name}" or "Website job application from {name}" (control characters including CR/LF removed, capped at 150). Body: submitted time (UK time), request id, then every filled-in field in the form's order (quote: name, company, location, phone, email, need by, project details, description; application: name, email); empty fields left out. Files: each file name with a signed link made at send time, valid 14 days (1209600 seconds), plus the date the links expire. If a listed file is not in storage yet, the alert waits (nothing sent, no attempt counted) until the row is 30 minutes old (`ALERT_FILE_WAIT_MS`); it then goes out with "(file did not arrive: the upload may have failed)" for that file and is marked notified.
@@ -229,10 +234,16 @@ Five pages: **About, Capabilities, Industries, Projects, Contact** (no "Our" pre
 - The company is registered with the ICO, number ZC269397 (to be checked against the certificate and the ICO register). The number goes into the Privacy Policy in the policy rewrite.
 - Analytics: GA4 runs through Google Tag Manager (container GTM-M995FM9J, published) behind Cookiebot consent; details in Project status. The Privacy Policy and Cookie Policy ("stores nothing in the browser", no analytics) are out of date and must be updated before go-live.
 
-## Microsoft 365 email (staying; admin access being set up)
-- The company has an existing Microsoft 365 subscription but the developer's login is a normal user, not an admin ("account doesn't have permission"). Needs a Global Admin login from Rob or the IT provider.
+## Microsoft 365 email (staying; set up 2026-10-30, details not confirmed)
+- The Microsoft side was set up by another IT person on 2026-10-30. The owner does not yet know the details, and the exact state is NOT confirmed:
+  - whether info@slsfabrications.com exists;
+  - whether the domain is verified;
+  - whether DKIM is on;
+  - whether an Entra app registration with Mail.Send restricted to info@ exists;
+  - who has admin access.
+- Find out and record it here before acting on anything Microsoft.
 - Email stays on Microsoft 365; Google Workspace was dropped.
-- Plan once admin access exists: add and verify slsfabrications.com in Microsoft (TXT verification record in Cloudflare DNS), CNAME `autodiscover` to `autodiscover.outlook.com` set to DNS only, create `info@slsfabrications.com` as a shared mailbox, test send and receive, enable DKIM. DMARC later.
+- Earlier plan (written before the 2026-10-30 setup; check against what was actually done): add and verify slsfabrications.com in Microsoft (TXT verification record in Cloudflare DNS), CNAME `autodiscover` to `autodiscover.outlook.com` set to DNS only, create `info@slsfabrications.com` as a shared mailbox, test send and receive, enable DKIM. DMARC later.
 - Do not add or change MX or SPF records until they have been reviewed.
 - The website alert emails (see "Alert emails" under Backend) also need Microsoft: a sending mailbox and an Entra app with Mail.Send restricted to it.
 - Do not change nameservers (the domain is already on Cloudflare). Do not touch the two website CNAMEs until the Worker is attached.
@@ -253,9 +264,10 @@ This replaces the earlier "Open items before launch", "Launch blockers" and "Ope
 - Lock-down SQL: not recorded as done; confirm before acting. Run `supabase/save-current-policies.sql` (keep the result), `supabase/lock-down-direct-inserts.sql` and `supabase/lock-down-checks.sql` (all queries return no rows, the contacts check returns relrowsecurity = true), then one real test per form.
 - Launch-readiness audit of the repo: sitemap, robots.txt, titles and descriptions, canonical and social tags, 404 page, favicon, leftover preview addresses.
 - Review every page's title and meta description together. For example, the Careers meta description still reads "We have no set vacancies at the moment, but send us your CV if you'd like to work with us."
+- Add social-share tags as part of that review: the site has none (no openGraph or twitter settings), so shared links show no proper title or image.
 - Allow the live domain, keeping the preview host:
-  - The `submit-form` origin check must allow https://slsfabrications.com and the www version. The code in the repo already lists both; confirm the deployed function matches.
-  - The Turnstile widget hostnames must include slsfabrications.com (listing the apex covers subdomains). Not recorded as done; confirm before acting.
+  - The `submit-form` origin check must allow https://slsfabrications.com and the www version. The code in the repo already lists both; checking the deployed copy matches is not recorded as done.
+  - The Turnstile widget hostnames (Cloudflare dashboard) must include slsfabrications.com (listing the apex covers subdomains). Not recorded as done.
 - Hosting decisions section (backups, upload limits, storage checks) once decided. Includes sweeping for orphaned `quote-files` uploads.
 - Photos:
   - Photo shot list; replace the test hero and tile images; add alt text; remove the Unsplash credits once the photos are replaced.
@@ -265,8 +277,8 @@ This replaces the earlier "Open items before launch", "Launch blockers" and "Ope
 - Optionally add the logo to the JSON-LD.
 
 ### Needs the owner, consultant or others
-- Microsoft:
-  - Licence and admin access.
+- Microsoft (set up by another IT person on 2026-10-30; find out and record the exact state first, see "Microsoft 365 email"):
+  - Who has admin access, and the licence.
   - The info@ mailbox must exist before launch, because the site shows it.
   - Verify the domain; DKIM.
   - Review MX and SPF before any change.
@@ -304,3 +316,8 @@ This replaces the earlier "Open items before launch", "Launch blockers" and "Ope
 - GA internal-traffic filter.
 - Watch Supabase logs and alerts for the first week; monthly Supabase storage check.
 - Real phone and screen reader (NVDA or VoiceOver) tests, a Turnstile keyboard check, and whether Next.js link-prefetch requests return 404 on the Worker (seen on a local static server).
+
+### Optional tidy-ups after launch
+- Remove http://localhost:3000 and the preview address from `ALLOWED_ORIGINS` in `submit-form` once they are not needed.
+- Replace the starter `README.md` and remove the unused starter SVGs in `public/`.
+- Have the Turnstile check in `submit-form` compare the hostname in Cloudflare's reply against the allowed domains.
