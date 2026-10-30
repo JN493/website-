@@ -27,10 +27,15 @@ Working rules for future sessions
 Done
 - Site: Next.js static export on Cloudflare Workers, preview at https://website.robstonesls77.workers.dev (behind Cloudflare Access), built from GitHub `main`. Not on the real domain yet.
 - Forms (quote, brochure, careers) with Turnstile, honeypot, Supabase Edge Function `submit-form`, contacts table.
-- Quote form has two optional fields, Location (town or area) and Need by (free text), stored in `quote_requests.location` and `quote_requests.need_by` (100 characters max each, null when empty).
+- Quote form has two optional fields, Location (town or area) and Need by (free text), stored in `quote_requests.location` and `quote_requests.need_by` (100 characters max each, null when empty). Finished and live (recorded 2026-10-30).
 - Form labels have no "(optional)" markers and no asterisks; required fields use the native `required` attribute.
 - Security headers with an enforcing CSP covering Tag Manager, Google Analytics, Cookiebot, Turnstile and Supabase.
-- Cookiebot (Domain Group ID fbd2a6ae-76e6-4170-bb8d-46ced9c918cf, preview added as an alias) loaded directly from `app/layout.tsx` after the Consent Mode defaults and Tag Manager.
+- Cookiebot (Domain Group ID fbd2a6ae-76e6-4170-bb8d-46ced9c918cf) loaded directly from `app/layout.tsx` after the Consent Mode defaults and Tag Manager.
+  - The paid (Premium) plan has been paid for (2026-10-30).
+  - slsfabrications.com is added as a live domain in the domain group. The preview address is an alias: aliases show a TEST banner and do not log consent.
+  - Whether www.slsfabrications.com is also listed is NOT confirmed.
+  - After launch: trigger a new scan, check consent appears in the Cookiebot log, and update the Cookie Policy table.
+- Alert emails for quotes and job applications: built and deployed in production, switched off (details under "Alert emails").
 - Tag Manager container GTM-M995FM9J is published:
   - The Google tag (G-24P1P65D2S) and the GA4 event tag both require `analytics_storage` consent.
   - The Google tag also fires on the custom event `cookie_consent_update` and is set to fire once per page.
@@ -55,40 +60,14 @@ Decisions
 - Copy is placeholder until the consultant writes it. The consultant's copy is now in for Capabilities, Industries, About and the home hero (2026-10-22).
 - Home tagline: "Sheet metal and welding specialists, bespoke service & designs from small to large scale projects." ("Steel shaped to spec" was removed.) Since 2026-10-22 it is only the home meta description; it is no longer shown on the page (the hero slides carry the text).
 - The workshop app (a dashboard for tracking jobs and workflows) is planned for later. Google sign-in is no longer assumed because Workspace was dropped.
+- Workshop app plan (written 2026-10-22): a PROPOSAL, not agreed with the owner. Status: proposed, awaiting decisions. Nothing is built. It proposes:
+  - A separate project and repo (not built inside this website), on its own subdomain.
+  - The same Supabase project to start.
+  - About 15 staff, each with their own account: a standard username, and an admin-created one-time password changed at first login.
+  - Roles; admins use an authenticator app.
+- The earlier rule that the word "partner" must not appear in Capabilities copy was reviewed and approved to be dropped by the owner (2026-10-22). The consultant's copy says "established manufacturing partners" for Laser Cutting, CNC Machining and Powder Coating.
 
-Open items before launch
-- Privacy Policy and Cookie Policy rewrite. Draft the text for approval before editing the site. It is one combined change with a new "Last updated" date, covering:
-  - Google Analytics and Tag Manager.
-  - Cookiebot consent logging and its cookie.
-  - Exact cookies and lifespans, taken from the vendors' documentation.
-  - The 12-month retention rules.
-  - The new quote fields.
-  - The Microsoft email line.
-  - The ICO registration number ZC269397 (verify it against the certificate and the ICO register).
-  - The backups line.
-  - The Cookie Policy line saying the site stores nothing in the browser, which is no longer true.
-- Microsoft 365:
-  - Admin access, create info@, verify the domain with a DNS record, enable DKIM.
-  - Do not touch MX or SPF records until reviewed.
-  - Do not delete the two Netlify CNAMEs until launch.
-- Brochure emailing is not built. It needs the brochure PDF, approved wording, a sender address and DKIM.
-- Launch steps:
-  - Attach the domain to the Worker.
-  - Set up www and .co.uk redirects, and HSTS.
-  - Retire Netlify.
-  - Submit the sitemap in Search Console and run the Rich Results test.
-  - On the real domain, check the CSP and that there is no Access login.
-- Supabase:
-  - Check backup retention on our plan.
-  - Sweep for orphaned quote-files uploads.
-  - Run the real-deletion test.
-- Replace the test hero images and get a full-size welding photo.
-- Optionally add the logo to the JSON-LD.
-- Test with a real screen reader (NVDA or VoiceOver) and a real phone.
-- Check the Cookiebot privacy icon against the footer on the preview.
-- Cookiebot only logs consent on the registered domain (the preview shows "Internal test version. Cookie Consent not logged"). Add slsfabrications.com to the Cookiebot domain group before launch and confirm consents appear in the consent log after launch.
-- Check whether Next.js link-prefetch requests return 404 on the Worker (seen on a local static server).
-- Consider an internal-traffic filter in Google Analytics after launch.
+Open items: see the single list in "Open items" at the end of this file.
 
 ## Hosting and deployment (current)
 - Host: Cloudflare Workers with static assets. Worker name `website`. Config in `wrangler.jsonc` (assets directory `./out`, 404 page handling).
@@ -163,7 +142,8 @@ Open items before launch
 - Schedule: `supabase/retention-schedule.sql` (pg_cron + pg_net, secret in Vault, daily 03:30 UTC), deployed and running in dry-run mode. To stop it: `select cron.unschedule('retention-cleanup-daily');` (also noted at the end of that file).
 - Tests: `node supabase/functions/retention-cleanup/test/retention.test.mjs` (in-memory fake Supabase, no network). Real-project dry run: `supabase/retention-test-seed.sql` then `supabase/retention-test-remove.sql` (rows marked retention-test-...@example.invalid).
 
-### Alert emails for quotes and job applications (code written 2026-10-22, not deployed, off)
+### Alert emails for quotes and job applications (deployed in production 2026-10-22, switched off)
+- Production status: on 2026-10-22 `supabase/alerts.sql` was run, `submit-form` and `alert-sweep` were deployed (`alert-sweep` with Verify JWT off), and the secrets were added with placeholder Microsoft values. `ALERTS_ENABLED` is NOT set. Tested with a test quote, a quote with a file and a CV: rows saved, `notified_at` empty, `notify_attempts` 0, no errors; the test rows and files were deleted; waiting counts 0. Not tested: the real Microsoft Graph call. Blocked on Microsoft (licence, admin access, info@, app registration).
 - Each quote request and job application emails info@ (`ALERT_TO`, one recipient) with the full details. Brochure requests are NOT included: brochure alerts and brochure sending are not built yet.
 - Sending: Microsoft Graph, client credentials flow with fetch only (no SDK): token from `login.microsoftonline.com/{GRAPH_TENANT_ID}/oauth2/v2.0/token`, then `POST /v1.0/users/{ALERT_FROM}/sendMail` with `saveToSentItems: false`. 10 second timeouts. Off unless `ALERTS_ENABLED` is exactly `true`: while off nothing is sent and no attempt is counted.
 - Email: plain text. From `ALERT_FROM`, to `ALERT_TO`, Reply-To the enquirer only if the address passes validation. Subject "Website quote request from {name}" or "Website job application from {name}" (control characters including CR/LF removed, capped at 150). Body: submitted time (UK time), request id, then every filled-in field in the form's order (quote: name, company, location, phone, email, need by, project details, description; application: name, email); empty fields left out. Files: each file name with a signed link made at send time, valid 14 days (1209600 seconds), plus the date the links expire. If a listed file is not in storage yet, the alert waits (nothing sent, no attempt counted) until the row is 30 minutes old (`ALERT_FILE_WAIT_MS`); it then goes out with "(file did not arrive: the upload may have failed)" for that file and is marked notified.
@@ -176,7 +156,7 @@ Open items before launch
 - Secrets (function secrets in the dashboard, never in the repo): `GRAPH_TENANT_ID`, `GRAPH_CLIENT_ID`, `GRAPH_CLIENT_SECRET`, `ALERT_FROM`, `ALERT_TO`, `ALERT_SWEEP_SECRET`, `ALERTS_ENABLED`. `submit-form` needs all but `ALERT_SWEEP_SECRET`; `alert-sweep` needs all of them.
 - Microsoft setup needed first: a mailbox to send from (`ALERT_FROM`); an Entra app registration with the Graph application permission Mail.Send, restricted to that one mailbox (not the whole tenant); a client secret for it, with a reminder set before it expires (alerts stop when it does).
 - Mailbox retention: the alert emails contain the same personal data as the requests, so the info@ mailbox's retention must also cover them.
-- Production order: (1) run `supabase/alerts.sql`; (2) deploy `submit-form` and `alert-sweep` (Verify JWT off for alert-sweep); (3) add the secrets but leave `ALERTS_ENABLED` unset; (4) when Microsoft is ready, set `ALERTS_ENABLED=true` and run `supabase/alerts-schedule.sql`.
+- Production order: (1) run `supabase/alerts.sql`; (2) deploy `submit-form` and `alert-sweep` (Verify JWT off for alert-sweep); (3) add the secrets but leave `ALERTS_ENABLED` unset; (4) when Microsoft is ready, set `ALERTS_ENABLED=true` and run `supabase/alerts-schedule.sql`. Steps 1 to 3 are done (2026-10-22, with placeholder Microsoft values); step 4 is open.
 - Tests: `node supabase/functions/submit-form/test/alerts.test.mjs` and `node supabase/functions/alert-sweep/test/alert-sweep.test.mjs` (fake Supabase + fake Graph in `supabase/functions/submit-form/test/fake-graph.mjs`, no network). The real Graph call has not been tested.
 
 ## Site structure (agreed)
@@ -212,7 +192,7 @@ Five pages: **About, Capabilities, Industries, Projects, Contact** (no "Our" pre
 ## Design direction
 - Rejected: dark, heavy industrial theme.
 - Target: clean, premium, light, like a high-end engineering firm.
-- Redesign built 2026-10-21 (contemporary, white space, modest rounded corners like the logo). Home: "SLS Fabrications" h1 (the tagline is no longer shown; it remains the home meta description), then `src/components/HeroCarousel.tsx`: team, welding, laser (TEST IMAGES, see Launch blockers); right to left including the wrap, 6s per slide, 600ms (keyframes `hero-in`/`hero-out` in `app/globals.css`); one dark pill bottom right (12px from the edges) holding the pause/play control (left end, required by WCAG 2.2.2) and the three dots. Since 2026-10-22 the pill is drawn at 70% (130x37: 31px slots, 7px dots and icon, 3px padding); tap areas are kept: each dot is its 31x31 slot (WCAG 2.2 minimum 24x24) and pause/play stays 44x44 through -6.5px margins, on top of the first dot, with its white focus ring pulled in to the drawn slot (kept as is on purpose, it shows only for keyboard focus); pauses on hover and focus; reduced motion starts paused with no animation. Hero images: `public/images/hero/<name>-<width>.webp` (640/1280/1920, never upscaled).
+- Redesign built 2026-10-21 (contemporary, white space, modest rounded corners like the logo). Home: "SLS Fabrications" h1 (the tagline is no longer shown; it remains the home meta description), then `src/components/HeroCarousel.tsx`: team, welding, laser (TEST IMAGES, see Open items); right to left including the wrap, 6s per slide, 600ms (keyframes `hero-in`/`hero-out` in `app/globals.css`); one dark pill bottom right (12px from the edges) holding the pause/play control (left end, required by WCAG 2.2.2) and the three dots. Since 2026-10-22 the pill is drawn at 70% (130x37: 31px slots, 7px dots and icon, 3px padding); tap areas are kept: each dot is its 31x31 slot (WCAG 2.2 minimum 24x24) and pause/play stays 44x44 through -6.5px margins, on top of the first dot, with its white focus ring pulled in to the drawn slot (kept as is on purpose, it shows only for keyboard focus); pauses on hover and focus; reduced motion starts paused with no animation. Hero images: `public/images/hero/<name>-<width>.webp` (640/1280/1920, never upscaled).
 - Hero text (2026-10-22, consultant's copy), top left of each slide over a dark gradient: slide 1 "From Concept to Creation. Thoughtfully Engineered." + "Explore Our Services →" (/capabilities); slide 2 "Made to Fit. Built to Perform." + "Bespoke fabrication. Practical solutions. Exceptional results." + "Discover What We Do →" (/capabilities); slide 3 "Ready to Make It Happen? Let's talk." + "Request a Quote →" (/contact#quote). Headlines are h2 (the page h1 is "SLS Fabrications"). The button is a white pill, always visible, lift and colour change on hover/focus (lift only without reduced motion), white focus ring (`.on-dark`). Hidden slides are `inert` and `aria-hidden`. White text measured at 7.84:1 or better against every pixel behind it (375 and 1280, all three photos). Below 360px wide the text is slightly smaller so slide 2 clears the controls pill.
 - Button arrows ("→") are decorative: always in a `<span aria-hidden="true">`, so the accessible name is just the words.
 
@@ -265,16 +245,62 @@ Five pages: **About, Capabilities, Industries, Projects, Contact** (no "Our" pre
 - Test on a real phone when possible (an iPhone 7 Plus caught a bug that simulated testing missed).
 - Past issue (resolved): duplicate `app` folders (`src/app/` and root `app/`) broke routing. All pages live in the root `app/`. Shared components are in `src/components/`.
 
-## Launch blockers
-- Home hero uses TEST IMAGES (marked "TEST IMAGE: replace before launch" in `src/components/HeroCarousel.tsx`; credits in `design-assets/SOURCES.md`). The team photo (Bhupathi Srinu) and the laser photo (Clayton Cardinalli) are Unsplash test images, and the team photo is NOT SLS staff. The welding photo is SLS's own but only 382x510; a full-size original is needed.
+## Open items (the single list, reconciled 2026-10-30)
+This replaces the earlier "Open items before launch", "Launch blockers" and "Open items" lists. Keep it as one list with no duplicates.
 
-## Open items
-- Rob: Microsoft admin login, mission statement, workshop photos, sector name wording, permission to name any clients, brochure PDF.
-- Rachael: proposed an optional "How did you hear about us?" field on the quote form (not yet agreed), plus Google Search Console and Google Business Profile.
+### Before launch (code and config)
+- Retention job: real-deletion test with fake rows older than 12 months (`supabase/retention-test-seed.sql`, then `supabase/retention-test-remove.sql`), then back to dry-run. Later, before about October 2027 and after reviewing `retention_log`, set `RETENTION_DELETE_ENABLED=true` only when the dry-run counts look right.
+- Lock-down SQL: not recorded as done; confirm before acting. Run `supabase/save-current-policies.sql` (keep the result), `supabase/lock-down-direct-inserts.sql` and `supabase/lock-down-checks.sql` (all queries return no rows, the contacts check returns relrowsecurity = true), then one real test per form.
+- Launch-readiness audit of the repo: sitemap, robots.txt, titles and descriptions, canonical and social tags, 404 page, favicon, leftover preview addresses.
+- Review every page's title and meta description together. For example, the Careers meta description still reads "We have no set vacancies at the moment, but send us your CV if you'd like to work with us."
+- Allow the live domain, keeping the preview host:
+  - The `submit-form` origin check must allow https://slsfabrications.com and the www version. The code in the repo already lists both; confirm the deployed function matches.
+  - The Turnstile widget hostnames must include slsfabrications.com (listing the apex covers subdomains). Not recorded as done; confirm before acting.
+- Hosting decisions section (backups, upload limits, storage checks) once decided. Includes sweeping for orphaned `quote-files` uploads.
+- Photos:
+  - Photo shot list; replace the test hero and tile images; add alt text; remove the Unsplash credits once the photos are replaced.
+  - Home hero TEST IMAGES are marked "TEST IMAGE: replace before launch" in `src/components/HeroCarousel.tsx`, credits in `design-assets/SOURCES.md`. The team photo (Bhupathi Srinu) and the laser photo (Clayton Cardinalli) are Unsplash test images, and the team photo is NOT SLS staff. The welding photo is SLS's own but only 382x510; a full-size original is needed.
+- Remaining page copy not yet received: Contact, Projects, Home (confirm). Projects case studies are pending photos.
+- Check the Cookiebot privacy icon against the footer on the preview.
+- Optionally add the logo to the JSON-LD.
+
+### Needs the owner, consultant or others
+- Microsoft:
+  - Licence and admin access.
+  - The info@ mailbox must exist before launch, because the site shows it.
+  - Verify the domain; DKIM.
+  - Review MX and SPF before any change.
+  - Entra app registration with Mail.Send restricted to info@.
+  - Add the Graph secrets, set `ALERTS_ENABLED=true` and run `supabase/alerts-schedule.sql`, then real tests.
+  - Calendar reminder before the client secret expires.
+  - Mailbox retention decision for the emailed alerts.
+- Supabase Free or Pro plan, and the backup approach if Free; upload size and count limits.
+- Policies (Privacy Policy and Cookie Policy rewrite): draft the text for approval before editing the site. One combined change with a new "Last updated" date. Needs approval and a compliance-tool check, and covers:
+  - Google Analytics and Tag Manager.
+  - Cookiebot consent logging and its cookie.
+  - Exact cookies and lifespans, taken from the vendors' documentation.
+  - The 12-month retention rules.
+  - The new quote fields.
+  - The Microsoft email line, and an alert-email line.
+  - The backups line.
+  - ICO number ZC269397, checked against the certificate and the ICO register.
+  - The Cookie Policy line saying the site stores nothing in the browser, which is no longer true.
+- Brochure: the PDF and sending are not built (they need approved wording, a sender address and DKIM). Decide whether the brochure form is hidden at launch.
+- Small copy checks: "decades of experience"; "Waterworks" versus the copy covering only wastewater; who owns the Google login; who holds the .co.uk domain.
+- Rob: mission statement, workshop photos, sector name wording, permission to name any clients.
 - Rob: asked 2026-10-08 about recovering the company Facebook page.
-- Lock-down (not recorded as done in Project status; confirm before acting): run `supabase/save-current-policies.sql` (keep the result), `supabase/lock-down-direct-inserts.sql` and `supabase/lock-down-checks.sql` (all queries return no rows, the contacts check returns relrowsecurity = true), then one real test per form. Already done and covered by Project status: `submit-form` with Turnstile, the site key build variable, the source columns and the contacts table.
-- Add the ICO registration number (ZC269397, once checked) to the Privacy Policy as part of the policy rewrite.
-- Alert emails (in this order): run `supabase/alerts.sql`; deploy `submit-form` and `alert-sweep`; add the secrets with `ALERTS_ENABLED` unset; when Microsoft is ready, set `ALERTS_ENABLED=true` and run `supabase/alerts-schedule.sql`. Details under "Alert emails".
-- Quote fields need_by and location (in this order): (1) run `supabase/quote-fields.sql` in the SQL Editor, (2) redeploy the `submit-form` function, (3) push the site. Deploying the function before step 1 makes every quote fail (it inserts the new columns).
-- Retention clean-up (deployed, dry run): still open are the real-deletion test with fake rows and, before about October 2027, reviewing `retention_log` and setting `RETENTION_DELETE_ENABLED=true` only when the dry-run counts look right.
-- Build: brochure emailing, Projects case studies, About page, homepage, attach domain to Worker, retire the old Netlify site.
+- Rachael: proposed an optional "How did you hear about us?" field on the quote form (not yet agreed), plus Google Search Console and Google Business Profile.
+
+### Launch day
+- Remove the two Netlify CNAMEs (not before), attach the Worker to slsfabrications.com, and make sure no Access login applies to the public domain.
+- www and .co.uk redirects: proxied A records to 192.0.2.1 plus 301 Redirect Rules keeping the path. Redirects for old Netlify addresses if any need keeping.
+- HTTPS check, then HSTS with a short max-age.
+- Live tests: a real quote and CV, then delete them; the CSP on the real domain; the Cookiebot banner and consent log; GA only after Accept.
+- Retire Netlify.
+- Search Console domain verification, sitemap submission, Rich Results test.
+
+### After launch
+- Cookiebot rescan and Cookie Policy table update.
+- GA internal-traffic filter.
+- Watch Supabase logs and alerts for the first week; monthly Supabase storage check.
+- Real phone and screen reader (NVDA or VoiceOver) tests, a Turnstile keyboard check, and whether Next.js link-prefetch requests return 404 on the Worker (seen on a local static server).
