@@ -9,12 +9,13 @@ export const metadata: Metadata = {
   alternates: { canonical: "/careers" },
 };
 
-// Copy approved 2026-10-30 (word for word; "talented people who strive" approved by the developer).
+// Copy approved 2026-10-30 (word for word; "talented people who strive" approved by the developer; the Welding &
+// Fabrication paragraph starts at "Welders" to avoid repeating "We're always interested", developer 2026-10-30).
 // One readable column (70ch). No images, cards or mailto links on this page.
 const areas = [
   {
     title: "Welding & Fabrication",
-    text: "We're always interested in hearing from exceptional welders and fabricators who set the standard. People with an instinctive eye for detail, a natural talent for solving problems and a level of skill and pride in their craft that's evident in everything they produce. If that sounds like you, you'll be in good company.",
+    text: "Welders and fabricators who set the standard. People with an instinctive eye for detail, a natural talent for solving problems and a level of skill and pride in their craft that's evident in everything they produce. If that sounds like you, you'll be in good company.",
   },
   {
     title: "Design & Technical",
