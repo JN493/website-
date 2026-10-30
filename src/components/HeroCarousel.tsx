@@ -24,7 +24,7 @@ const slides = [
     position: "50% 40%", // portrait source: keep the helmet visor and torch tip in frame
     headline: "Made to Fit. Built to Perform.",
     line: "Bespoke fabrication. Practical solutions. Exceptional results.",
-    cta: { label: "Discover What We Do", href: "/capabilities" },
+    cta: { label: "Discover What We Do", href: "/industries" },
   },
   {
     alt: "A laser cutting head cutting patterns into sheet metal with a spray of sparks",
