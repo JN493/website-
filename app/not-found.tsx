@@ -22,7 +22,7 @@ export default function NotFound() {
           <div>
             <h1 className="accent-line text-3xl font-bold tracking-tight text-brand sm:text-4xl">Page not found</h1>
             <p className="mt-4 max-w-3xl text-lg text-muted">The page you&apos;re looking for doesn&apos;t exist or has moved.</p>
-            <div className="mt-8 flex flex-wrap gap-4">
+            <div className="mt-8 flex flex-wrap gap-3">
               <Link href="/" className="btn btn-primary">Back to home</Link>
               <Link href="/contact" className="btn btn-secondary">Contact us</Link>
             </div>
