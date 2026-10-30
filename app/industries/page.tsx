@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import TileGrid from "@/components/TileGrid";
+import PopupTiles from "@/components/PopupTiles";
 import PageHeader from "@/components/PageHeader";
 import { industries } from "@/lib/industries";
 
@@ -20,7 +20,7 @@ export default function Industries() {
         <p className="mt-3">Explore some of the sectors we work in and contact us to discuss your project today.</p>
       </PageHeader>
       <div className="container-page py-12 sm:py-16">
-        <TileGrid tiles={industries.map((i) => ({ title: i.title, description: i.subtitle }))} />
+        <PopupTiles items={industries} />
         {/* /contact#quote opens the quote form (app/contact/page.tsx reads the hash). */}
         <div className="mt-14">
           <Link href="/contact#quote" className="btn btn-primary">

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import CapabilityTiles from "@/components/CapabilityTiles";
+import PopupTiles from "@/components/PopupTiles";
 import PageHeader from "@/components/PageHeader";
 import { capabilities } from "@/lib/capabilities";
 
@@ -19,7 +19,7 @@ export default function Capabilities() {
         </p>
       </PageHeader>
       <div className="container-page py-12 sm:py-16">
-        <CapabilityTiles items={capabilities} />
+        <PopupTiles items={capabilities} />
         {/* /contact#quote opens the quote form (app/contact/page.tsx reads the hash). */}
         <div className="mt-14 flex flex-col items-start gap-4">
           <p className="text-lg font-semibold text-ink">Already have a project in mind?</p>

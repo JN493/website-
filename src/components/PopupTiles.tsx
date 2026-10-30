@@ -1,18 +1,30 @@
 "use client";
 import { useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import Reveal from "@/components/Reveal";
-import { ImageBox } from "@/components/TileGrid";
-import type { Capability } from "@/lib/capabilities";
 
-// Capabilities tiles: each is a button that opens a native <dialog> (showModal) with that service's copy.
-// All 12 dialogs are in the HTML from the start (closed), so search engines can read them.
-// Each pop-up has its own link, /capabilities#<slug>:
+// Tiles that open pop-ups, shared by Capabilities (src/lib/capabilities.ts) and Industries (src/lib/industries.ts).
+// Each tile is a button that opens a native <dialog> (showModal) with that item's copy.
+// All dialogs are in the HTML from the start (closed), so search engines can read them.
+// Each pop-up has its own link, /<page>#<slug>:
 //   - opening from a tile pushes #slug, so the browser Back button closes it;
 //   - loading the page with #slug opens it, and closing then removes the hash without adding history;
 //   - an unknown hash is ignored.
 // showModal gives Esc to close, keeps focus inside and makes the page behind inert. We add: click outside
 // closes, focus returns to the tile, the page behind cannot scroll. No tracking events.
+
+export type PopupItem = {
+  slug: string; // the pop-up's link, #slug
+  title: string;
+  subtitle: string; // tile text
+  intro: string[]; // pop-up paragraphs
+  applications: string[]; // "Applications include:" list
+  afterList?: string; // paragraph directly below the list (only some items)
+  closing: string; // pop-up closing heading
+  closingText?: string; // extra closing paragraph (only some items)
+  image?: string;
+};
 
 type Ctl = {
   dialogs: Record<string, HTMLDialogElement | null>;
@@ -20,6 +32,19 @@ type Ctl = {
   open: string | null; // slug of the open pop-up
   pushed: boolean; // true when our pushState added the current #slug history entry
 };
+
+// 4:3 image box, steel-grey when there's no photo, with the title overlaid bottom-left (a span: no headings
+// inside buttons). Plain rgba gradient (not Tailwind's gradient utilities) so it renders on older iOS Safari.
+function ImageBox({ title, image, titleId }: { title: string; image?: string; titleId: string }) {
+  return (
+    <div className="relative aspect-[4/3] shrink-0 overflow-hidden rounded-lg bg-steel">
+      {image && <Image src={image} alt="" fill sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" className="object-cover" />}
+      <div className="absolute inset-x-0 bottom-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.7),rgba(0,0,0,0))] px-4 pb-3 pt-12">
+        <span id={titleId} className="tile-text block text-lg font-semibold text-white">{title}</span>
+      </div>
+    </div>
+  );
+}
 
 function lockScroll(on: boolean) {
   const s = document.documentElement.style;
@@ -31,11 +56,11 @@ const hashSlug = () => decodeURIComponent(window.location.hash.slice(1));
 const urlWithoutHash = () => window.location.pathname + window.location.search;
 
 // The pop-up sits flush under the sticky header. Its top is the header's current bottom edge, measured on open
-// and on resize (the header height can change between screen sizes), passed to CSS as --cap-dialog-top.
+// and on resize (the header height can change between screen sizes), passed to CSS as --tile-dialog-top.
 function setDialogTop(dialog: HTMLDialogElement) {
   const header = document.querySelector("header");
   const top = header ? Math.max(0, Math.round(header.getBoundingClientRect().bottom)) : 0;
-  dialog.style.setProperty("--cap-dialog-top", `${top}px`);
+  dialog.style.setProperty("--tile-dialog-top", `${top}px`);
 }
 
 function showDialog(ctl: Ctl, slug: string, push: boolean) {
@@ -88,7 +113,7 @@ function handleClosed(ctl: Ctl, slug: string) {
   ctl.tiles[slug]?.focus();
 }
 
-export default function CapabilityTiles({ items }: { items: Capability[] }) {
+export default function PopupTiles({ items }: { items: PopupItem[] }) {
   const ctl = useRef<Ctl>({ dialogs: {}, tiles: {}, open: null, pushed: false });
 
   useEffect(() => {
@@ -119,16 +144,17 @@ export default function CapabilityTiles({ items }: { items: Capability[] }) {
                 ctl.current.tiles[c.slug] = el;
               }}
               aria-haspopup="dialog"
-              aria-labelledby={`cap-${c.slug}-name`}
-              aria-describedby={`cap-${c.slug}-sub`}
+              aria-labelledby={`tile-${c.slug}-name`}
+              aria-describedby={`tile-${c.slug}-sub`}
               onClick={() => showDialog(ctl.current, c.slug, true)}
               // Flex column, not block: a <button> centres its contents vertically when it is taller than them,
-              // which pushed the image down on blocks with less text. As in TileGrid, the text area fills the rest.
+              // which pushed the image down on blocks with less text. The text area (.tile-desc, which carries the
+              // grey hover gradient) fills the rest, so every block's image and hover box line up and match in size.
               className="tile flex h-full w-full cursor-pointer flex-col rounded-lg text-left"
             >
-              <ImageBox title={c.title} image={c.image} titleAs="span" titleId={`cap-${c.slug}-name`} />
+              <ImageBox title={c.title} image={c.image} titleId={`tile-${c.slug}-name`} />
               <span className="tile-desc mt-4 block flex-1">
-                <span id={`cap-${c.slug}-sub`} className="tile-text block text-muted">{c.subtitle}</span>
+                <span id={`tile-${c.slug}-sub`} className="tile-text block text-muted">{c.subtitle}</span>
               </span>
             </button>
           </Reveal>
@@ -141,7 +167,7 @@ export default function CapabilityTiles({ items }: { items: Capability[] }) {
           ref={(el) => {
             ctl.current.dialogs[c.slug] = el;
           }}
-          aria-labelledby={`cap-${c.slug}-title`}
+          aria-labelledby={`tile-${c.slug}-title`}
           onCancel={(e) => {
             e.preventDefault(); // Esc: close through requestClose so the hash and history stay right
             requestClose(ctl.current);
@@ -151,12 +177,12 @@ export default function CapabilityTiles({ items }: { items: Capability[] }) {
             if (e.target === e.currentTarget) requestClose(ctl.current); // the backdrop (the panel fills the dialog)
           }}
           // Same width as the page's tile grid (--page-max less two --page-gutter, as .container-page), top flush
-          // under the header (--cap-dialog-top), bottom 16px above the screen edge (dvh, so phone bars do not hide it).
-          className="cap-dialog mx-auto mb-auto mt-[var(--cap-dialog-top,0px)] h-[calc(100dvh_-_var(--cap-dialog-top,0px)_-_16px)] max-h-none w-[calc(min(var(--page-max),100%)_-_2*var(--page-gutter))] max-w-none overflow-hidden rounded-b-lg rounded-t-none bg-white p-0 text-ink shadow-2xl backdrop:bg-[rgba(20,33,43,0.6)]"
+          // under the header (--tile-dialog-top), bottom 16px above the screen edge (dvh, so phone bars do not hide it).
+          className="tile-dialog mx-auto mb-auto mt-[var(--tile-dialog-top,0px)] h-[calc(100dvh_-_var(--tile-dialog-top,0px)_-_16px)] max-h-none w-[calc(min(var(--page-max),100%)_-_2*var(--page-gutter))] max-w-none overflow-hidden rounded-b-lg rounded-t-none bg-white p-0 text-ink shadow-2xl backdrop:bg-[rgba(20,33,43,0.6)]"
         >
           <div className="flex h-full flex-col">
             <div className="flex items-start justify-between gap-4 border-b border-line px-6 py-4 sm:px-8">
-              <h2 id={`cap-${c.slug}-title`} className="pt-1.5 text-2xl font-bold tracking-tight text-brand">
+              <h2 id={`tile-${c.slug}-title`} className="pt-1.5 text-2xl font-bold tracking-tight text-brand">
                 {c.title}
               </h2>
               <button
@@ -182,6 +208,7 @@ export default function CapabilityTiles({ items }: { items: Capability[] }) {
                   <li key={a}>{a}</li>
                 ))}
               </ul>
+              {c.afterList && <p className="mt-4">{c.afterList}</p>}
               <h3 className="mt-8 text-lg font-semibold text-brand">{c.closing}</h3>
               {c.closingText && <p className="mt-2">{c.closingText}</p>}
               <Link href="/contact" className="btn btn-primary mt-6">

@@ -1,20 +1,10 @@
 // Capabilities page: the 12 services, in order. Copy is the consultant's (2026-10-22): use it word for word.
-// Each tile shows the title and subtitle; the rest is the pop-up (src/components/CapabilityTiles.tsx),
+// Each tile shows the title and subtitle; the rest is the pop-up (src/components/PopupTiles.tsx),
 // which opens from the tile and has its own link, /capabilities#<slug>.
 // To add a photo: put the file in public/images/capabilities/<slug>.jpg and set image to "/images/capabilities/<slug>.jpg".
+import type { PopupItem } from "@/components/PopupTiles";
 
-export type Capability = {
-  slug: string;
-  title: string;
-  subtitle: string; // tile text
-  intro: string[]; // pop-up paragraphs
-  applications: string[]; // "Applications include:" list
-  closing: string; // pop-up closing heading
-  closingText?: string; // extra closing paragraph (only some services)
-  image?: string;
-};
-
-export const capabilities: Capability[] = [
+export const capabilities: PopupItem[] = [
   {
     slug: "surveying",
     title: "Surveying",
