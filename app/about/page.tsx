@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/pageMetadata";
 import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "About SLS Fabrications | Hailsham, East Sussex",
-  description: "Meet the team behind SLS Fabrications, skilled welders and fabricators delivering precision work from our Hailsham workshop.",
-  alternates: { canonical: "/about" },
-};
+  description: "Precision metal fabrication from East Sussex, combining technical expertise, skilled workmanship and forward-thinking ideas.",
+  path: "/about",
+});
 
 // Copy is the consultant's (2026-10-22): use it word for word.
 export default function About() {

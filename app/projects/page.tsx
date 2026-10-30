@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/pageMetadata";
 import BrochureForm from "@/components/BrochureForm";
 import PageHeader from "@/components/PageHeader";
 
-export const metadata: Metadata = {
+// Title and description on hold (2026-10-30): unchanged until decided.
+export const metadata: Metadata = pageMetadata({
   title: "Our Work & Case Studies | SLS Fabrications",
   description: "Browse real fabrication projects across industries, or download our brochure to see the full range of SLS Fabrications' work.",
-  alternates: { canonical: "/projects" },
-};
+  path: "/projects",
+});
 
 export default function Projects() {
   return (

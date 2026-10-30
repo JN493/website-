@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/pageMetadata";
 import Link from "next/link";
 import PopupTiles from "@/components/PopupTiles";
 import PageHeader from "@/components/PageHeader";
 import { industries } from "@/lib/industries";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Industries We Serve | SLS Fabrications, Hailsham",
-  description: "From airport maintenance to pharmaceutical, see the sectors SLS Fabrications has delivered real projects for, direct and as a trusted subcontractor.",
-  alternates: { canonical: "/industries" },
-};
+  description: "Metal fabrication for airport maintenance, waterworks, pharmaceutical, architectural, automotive, defence and more. See the sectors we work in.",
+  path: "/industries",
+});
 
 export default function Industries() {
   return (

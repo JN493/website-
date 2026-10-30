@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/pageMetadata";
 import PageHeader from "@/components/PageHeader";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Terms of Use | SLS Fabrications",
-  alternates: { canonical: "/terms" },
-};
+  description: "The terms for using the SLS Fabrications website.",
+  path: "/terms",
+});
 
 export default function Terms() {
   return (
@@ -14,7 +16,7 @@ export default function Terms() {
       <div className="max-w-3xl leading-relaxed text-ink">
       <p className="mb-4">Last updated: 8 October 2026</p>
       <p className="mb-4">
-        This website is run by SLS Fabrications Limited (company number 03187824), registered office 30-34 North Street, Hailsham, East Sussex, BN27 1DW. By using this website, you agree to these terms.
+        This website is run by SLS Fabrications Limited, registered in England and Wales (company number 03187824), registered office 30-34 North Street, Hailsham, East Sussex, BN27 1DW. By using this website, you agree to these terms.
       </p>
 
       <h2 className="accent-line mt-10 mb-3 text-xl font-semibold text-brand">Content</h2>

@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
 import HeroCarousel from "@/components/HeroCarousel";
+import { pageMetadata } from "@/lib/pageMetadata";
 
 // Home meta description (no longer shown on the page: the hero slides carry the text now).
 const tagline = "Sheet metal and welding specialists, bespoke service & designs from small to large scale projects.";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "SLS Fabrications | Steel Welding & Fabrication in Hailsham",
   description: tagline,
-  alternates: { canonical: "/" },
-};
+  path: "/",
+});
 
 export default function Home() {
   return (

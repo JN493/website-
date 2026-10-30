@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/pageMetadata";
 import PageHeader from "@/components/PageHeader";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Privacy Policy | SLS Fabrications",
-  alternates: { canonical: "/privacy" },
-};
+  description: "How SLS Fabrications collects, uses and protects your personal data through this website.",
+  path: "/privacy",
+});
 
 const email = <a href="mailto:info@slsfabrications.com" className="text-brand underline underline-offset-2">info@slsfabrications.com</a>;
 const phone = <a href="tel:01323846061" className="text-brand underline underline-offset-2">01323 846061</a>;

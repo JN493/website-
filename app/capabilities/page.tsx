@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/pageMetadata";
 import Link from "next/link";
 import PopupTiles from "@/components/PopupTiles";
 import PageHeader from "@/components/PageHeader";
 import { capabilities } from "@/lib/capabilities";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Welding, Fabrication & CNC Services | Hailsham, East Sussex",
   description: "From CAD design and welding to CNC machining and powder coating, explore our full range of fabrication capabilities.",
-  alternates: { canonical: "/capabilities" },
-};
+  path: "/capabilities",
+});
 
 export default function Capabilities() {
   return (

@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
+import { pageMetadata } from "@/lib/pageMetadata";
 
-export const metadata: Metadata = {
+// No path: the 404 page has no canonical or og:url (Next.js adds noindex).
+export const metadata: Metadata = pageMetadata({
   title: "Page not found | SLS Fabrications",
-};
+  description: "The page you're looking for doesn't exist or has moved.",
+});
 
 export default function NotFound() {
   return (

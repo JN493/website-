@@ -54,9 +54,13 @@ export default function Footer() {
         <Link href="/cookies" className="py-2 -my-2 hover:text-white hover:underline">Cookie Policy</Link>
         <CookieSettingsButton />
       </div>
-      {/* Last row: copyright flush left, decorative logo bottom right (ml-auto keeps it right if the row wraps). */}
+      {/* Last row: copyright and the registered company details the law requires on a company website (name, place of
+          registration, number, registered office), flush left in small text; decorative logo bottom right (ml-auto keeps
+          it right if the row wraps). */}
       <div className="mt-4 flex flex-wrap items-end gap-6">
-        <p>&copy; 2026 SLS Fabrications</p>
+        <p className="min-w-0 max-w-2xl flex-1 basis-64 text-xs leading-relaxed">
+          &copy; 2026 SLS Fabrications Limited. Registered in England and Wales, company number 03187824. Registered office: <span className="whitespace-nowrap">30-34</span> North Street, Hailsham, East Sussex, BN27 1DW.
+        </p>
         {/* Lazy: it is at the bottom of the page, and React only preloads non-lazy images (the preload went unused). */}
         {/* eslint-disable-next-line @next/next/no-img-element -- static export, images are unoptimised anyway */}
         <img src="/images/logo/logo-white.png" srcSet="/images/logo/logo-white@2x.png 2x" width={102} height={52} alt="" loading="lazy" className="ml-auto" />

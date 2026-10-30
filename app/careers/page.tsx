@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/pageMetadata";
 import CareersForm from "@/components/CareersForm";
 import PageHeader from "@/components/PageHeader";
 import JumpToSection from "@/components/JumpToSection";
 
-export const metadata: Metadata = {
-  title: "Careers | SLS Fabrications, Hailsham",
-  description: "Join the SLS Fabrications team in Hailsham. We have no set vacancies at the moment, but send us your CV if you'd like to work with us.",
-  alternates: { canonical: "/careers" },
-};
+export const metadata: Metadata = pageMetadata({
+  title: "Join Our Team | SLS Fabrications, Hailsham",
+  description: "Exceptional work by exceptional people. We're always interested in meeting welders, fabricators, designers and leaders who share our standards.",
+  path: "/careers",
+});
 
 // Copy approved 2026-10-30 (word for word; "talented people who strive" approved by the developer; the Welding &
 // Fabrication paragraph starts at "Welders" to avoid repeating "We're always interested", developer 2026-10-30).
