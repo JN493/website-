@@ -31,6 +31,13 @@ const SPARK_LIFE = 0.65; // s, each spark fades out over this (at least 0.6)
 const SPARKS_PER_SECOND = 10; // about 7 alive at a time
 const BRAND = "#004167";
 const SPARK = "#5b9bd0"; // lighter brand tint, visible on white
+// Sizes in drawing units (viewBox 400 wide). The SVG is shown at 120 to 150px wide (about 0.3 to 0.375 px per unit),
+// so these are set to stay visible at that size: line about 2 to 2.6px, laser core about 1.5 to 1.9px with a 5 to 6px
+// glow, sparks about 1px.
+const STROKE = 7;
+const LASER_CORE = 5;
+const LASER_GLOW = 16;
+const SPARK_R = 3;
 
 const r1 = (n: number) => Math.round(n * 10) / 10;
 const r3 = (n: number) => Math.round(n * 1000) / 1000;
@@ -128,7 +135,7 @@ function build() {
 
 const art = build();
 
-export default function LaserNumerals() {
+export default function LaserNumerals({ className = "" }: { className?: string }) {
   return (
     // width/height give the aspect ratio up front, so the space is reserved before it draws (no layout shift).
     <svg
@@ -137,7 +144,7 @@ export default function LaserNumerals() {
       height={210}
       aria-hidden="true"
       focusable="false"
-      className="ln-anim block h-auto w-full max-w-[420px]"
+      className={`ln-anim block h-auto ${className}`}
     >
       <style dangerouslySetInnerHTML={{ __html: art.style }} />
       <defs>
@@ -150,15 +157,15 @@ export default function LaserNumerals() {
         <path key={f.cls} d={f.d} className={f.cls} fill="#eef4f8" fillRule="evenodd" />
       ))}
       {art.strokes.map((s) => (
-        <path key={s.cls} d={s.d} className={s.cls} fill="none" stroke={BRAND} strokeWidth={5} strokeLinecap="round" strokeLinejoin="round" />
+        <path key={s.cls} d={s.d} className={s.cls} fill="none" stroke={BRAND} strokeWidth={STROKE} strokeLinecap="round" strokeLinejoin="round" />
       ))}
       {art.sparks.map((s) => (
-        <circle key={s.cls} className={`ln-spark ${s.cls}`} r={1.4} fill={SPARK} />
+        <circle key={s.cls} className={`ln-spark ${s.cls}`} r={SPARK_R} fill={SPARK} />
       ))}
       {art.lasers.map((l) => (
         <g key={l} className={`ln-laser ${l}`}>
-          <circle r={10} fill="url(#ln-glow)" />
-          <circle r={2.8} fill="#8cc4ee" />
+          <circle r={LASER_GLOW} fill="url(#ln-glow)" />
+          <circle r={LASER_CORE} fill="#8cc4ee" />
         </g>
       ))}
     </svg>
