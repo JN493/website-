@@ -119,11 +119,14 @@ export default function Contact() {
 
   return (
     <main id="main">
-      <PageHeader title={showQuoteForm ? "Request a Quote" : "Contact"}>
+      <PageHeader title={showQuoteForm ? "Request a Quote" : "Good Ideas Deserve Great Execution."}>
         {!showQuoteForm && (
-          <p>
-            Have a project ready to quote, need help finding the right solution, or want to join us? Choose the option that fits.
-          </p>
+          <>
+            <p>
+              From precision components to bespoke installations, SLS Fabrications brings skilled workmanship, technical expertise and practical thinking to every project.
+            </p>
+            <p className="mt-3">Whether you&apos;re working from a detailed specification or developing a new idea, let&apos;s get started.</p>
+          </>
         )}
       </PageHeader>
 
@@ -141,7 +144,7 @@ export default function Contact() {
             <Reveal as="section" className="card flex flex-col">
               <h2 className="text-xl font-semibold text-brand mb-2">Request a Quote</h2>
               <p className="text-muted">
-                Ready to partner on your next project? Have drawings or a specification in mind? Send us the details so our team can discuss your requirements and prepare a quote.
+                Know what you need? Send us your drawings, specifications or project details, and our team will review your requirements and prepare a quotation.
               </p>
               <div className="mt-auto pt-6">
                 <button
@@ -159,8 +162,8 @@ export default function Contact() {
             </Reveal>
 
             <Reveal as="section" className="card flex flex-col">
-              <h2 className="text-xl font-semibold text-brand mb-2">Talk to the Team</h2>
-              <p className="text-muted">Not sure what you want, but looking for a solution? Talk to our team.</p>
+              <h2 className="text-xl font-semibold text-brand mb-2">Make an Enquiry</h2>
+              <p className="text-muted">Have a concept you&apos;d like to develop or a challenge to solve? Our team is here to help.</p>
               <div className="mt-auto pt-6">
                 <a
                   href="mailto:info@slsfabrications.com"
@@ -175,8 +178,8 @@ export default function Contact() {
             </Reveal>
 
             <Reveal as="section" className="card flex flex-col">
-              <h2 className="text-xl font-semibold text-brand mb-2">Join Our Team</h2>
-              <p className="text-muted">No current vacancies, but we&apos;d like to hear from you. Send us your CV.</p>
+              <h2 className="text-xl font-semibold text-brand mb-2">Careers at SLS</h2>
+              <p className="text-muted">We&apos;re proud of the people behind our work and always on the lookout for exceptional talent. If you bring fresh thinking, serious skills and the drive to challenge the ordinary, we&apos;d like to hear from you.</p>
               <div className="mt-auto pt-6">
                 <Link href="/careers" className="btn btn-secondary">
                   Join Our Team
