@@ -153,7 +153,8 @@ export default function Contact() {
                     focusAfterToggle.current = "name";
                     setShowQuoteForm(true);
                   }}
-                  className="btn btn-primary"
+                  // 48px like the two outlined buttons beside it, whose 2px border makes them taller than .btn's 44px.
+                  className="btn btn-primary min-h-12"
                 >
                   Request a Quote
                 </button>
