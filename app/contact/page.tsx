@@ -8,7 +8,7 @@ import Turnstile, { TURNSTILE_WAIT_MESSAGE } from "@/components/Turnstile";
 import PageHeader from "@/components/PageHeader";
 import Reveal from "@/components/Reveal";
 
-// Invisible copy of the phone line under the Request a Quote and Join Our Team buttons,
+// Invisible copy of the phone line under the Request a Quote and Careers at SLS buttons,
 // so all three buttons line up when the cards sit side by side (lg). Hidden entirely when the cards stack.
 const phoneSpacer = (
   <p aria-hidden="true" className="invisible hidden lg:block text-sm mt-4">
@@ -182,7 +182,7 @@ export default function Contact() {
               <p className="text-muted">We&apos;re proud of the people behind our work and always on the lookout for exceptional talent. If you bring fresh thinking, serious skills and the drive to challenge the ordinary, we&apos;d like to hear from you.</p>
               <div className="mt-auto pt-6">
                 <Link href="/careers" className="btn btn-secondary">
-                  Join Our Team
+                  Careers at SLS
                 </Link>
                 {phoneSpacer}
               </div>
