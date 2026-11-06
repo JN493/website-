@@ -72,8 +72,9 @@ export default function Nav() {
             );
           })}
         </nav>
-        {/* Brand blue like the other solid buttons, a little smaller, and a darker navy (#001d2e) on hover/focus; separate from the menu links. */}
-        <Link href="/contact#quote" className="btn btn-primary ml-2 min-h-10 px-4 py-1.5 text-sm hover:bg-[#001d2e] focus-visible:bg-[#001d2e] lg:ml-3">Request a Quote</Link>
+        {/* Pale blue (tint #eef4f8) with dark text, no outline; brand blue with white text on hover and focus. A little smaller than the
+            other buttons and separate from the menu links. Ink on tint is 14.76:1, white on brand 10.76:1. */}
+        <Link href="/contact#quote" className="btn ml-2 min-h-10 bg-tint px-4 py-1.5 text-sm text-ink hover:bg-brand hover:text-white focus-visible:bg-brand focus-visible:text-white lg:ml-3">Request a Quote</Link>
       </div>
       <button
         type="button"

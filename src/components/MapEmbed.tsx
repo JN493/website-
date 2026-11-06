@@ -18,14 +18,14 @@ export default function MapEmbed({ src, title }: { src: string; title: string })
   }
 
   return (
-    // Brand blue like the footer, with a 1px light outline so the box still shows; white text and a white-outlined
-    // button (white on #004167 is 10.76:1). It sits inside the footer's .on-dark, so focus rings are white.
-    <div className="h-full w-full rounded-lg border border-white/50 bg-brand text-white flex flex-col items-center justify-center gap-3 px-4 text-center">
-      <button type="button" onClick={() => setShow(true)} className="btn border-2 border-white bg-transparent text-white hover:bg-white/10">
+    // Pale blue (tint #eef4f8) with a 1px white outline on the dark footer. .on-light brings back the blue focus ring
+    // (the footer's .on-dark would give a white one, invisible on a pale box).
+    <div className="on-light h-full w-full rounded-lg border border-white bg-tint text-muted flex flex-col items-center justify-center gap-3 px-4 text-center">
+      <button type="button" onClick={() => setShow(true)} className="btn btn-secondary">
         Show map
       </button>
       <p>
-        Loads a map from Google. See our <Link href="/cookies" className="text-white underline underline-offset-2">Cookie Policy</Link>.
+        Loads a map from Google. See our <Link href="/cookies" className="text-brand underline underline-offset-2">Cookie Policy</Link>.
       </p>
     </div>
   );
