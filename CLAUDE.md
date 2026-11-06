@@ -292,8 +292,8 @@ This replaces the earlier "Open items before launch", "Launch blockers" and "Ope
 - Cookiebot script loading: decide whether uc.js should stay synchronous (as now) or load async. Cookiebot's "How to improve your Cookiebot CMP banner load time" (https://support.cookiebot.com/hc/en-us/articles/29979960668956) says manual blocking (our mode) "lets the script load asynchronously", automatic blocking loads synchronously, the script should be "the first script in your page's <head>", and optimisation tools must not defer it. Change nothing until decided.
 - Social-share image: none yet (no og:image or twitter image until one is approved).
 - Allow the live domain, keeping the preview host:
-  - The `submit-form` origin check must allow https://slsfabrications.com and the www version. The code in the repo already lists both; checking the deployed copy matches is not recorded as done.
-  - The Turnstile widget hostnames (Cloudflare dashboard) must include slsfabrications.com (listing the apex covers subdomains). Not recorded as done.
+  - `submit-form` origin check: DONE 2026-11-06. The deployed copy in the Supabase dashboard lists all four origins (the .com, the www, the preview, localhost), has `need_by` and `location`, `ALERT CODE START` at line 170, `ALERTS_ENABLED` at line 211 and 422 lines, the same as the repo (checked by eye in the dashboard editor, not by a file comparison; the editor's search missed some of these, line numbers were used instead).
+  - Turnstile widget hostnames: DONE 2026-11-06. The widget lists localhost, slsfabrications.com, www.slsfabrications.com and the preview address. slsfabrications.co.uk is not listed and does not need to be (it only redirects, no forms).
 - Hosting decisions section (backups, upload limits, storage checks) once decided. Includes sweeping for orphaned `quote-files` uploads.
 - Photos:
   - Photo shot list; replace the test hero and tile images; add alt text; remove the Unsplash credits once the photos are replaced.
