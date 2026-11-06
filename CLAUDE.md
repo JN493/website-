@@ -334,7 +334,7 @@ Already done on 2026-11-06 (see "Hosting and deployment"): the two Netlify CNAME
 - Cookiebot rescan and Cookie Policy table update.
 - GA internal-traffic filter.
 - Watch Supabase logs and alerts for the first week; monthly Supabase storage check.
-- Real phone and screen reader (NVDA or VoiceOver) tests, a Turnstile keyboard check, and whether Next.js link-prefetch requests return 404 on the Worker (seen on a local static server; the audit of 2026-10-30 found the browser asks for `/<page>/__next.<page>.__PAGE__.txt` while the build writes `/<page>/__next.<page>/__PAGE__.txt`, so it will very likely 404 on the Worker too).
+- Real phone and screen reader (NVDA or VoiceOver) tests, a Turnstile keyboard check, and whether Next.js link-prefetch requests return 404 on the Worker. Checked 2026-11-06 in a local Worker (`wrangler dev` serving the production build in `./out`, Chromium, home, Capabilities and Contact scrolled and a header link clicked): every `__next` request returned 200 (about 40 distinct URLs, none 404). The build writes `/<page>/__next.<page>.__PAGE__.txt` and the browser asks for exactly that name, so the earlier suspicion of a name mismatch (seen on a local static server) did not reproduce. The deployed preview is behind Access and was not checked from here: confirm once there with F12, Network, filter `__next`.
 
 ### Optional tidy-ups after launch
 - Remove http://localhost:3000 and the preview address from `ALLOWED_ORIGINS` in `submit-form` once they are not needed.
