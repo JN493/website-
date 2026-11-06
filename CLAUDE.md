@@ -259,6 +259,13 @@ Five pages: **About, Capabilities, Industries, Projects, Contact** (no "Our" pre
   - whether an Entra app registration with Mail.Send restricted to info@ exists;
   - who has admin access.
 - Find out and record it here before acting on anything Microsoft.
+- Answers from the IT person (Simon Brown, 2026-11-06, by email; DNS export checked against it):
+  - info@slsfabrications.com is a SHARED mailbox, directed to Office@ (whether that is a forward or delegated access is not stated).
+  - DKIM is on: both selector CNAMEs are in Cloudflare DNS (selector1 and selector2, `slsfabricationsltd.n-v1.dkim.mail.microsoft`).
+  - The Entra app registration is done by his team, not by us; Mail.Send limited to info@ with RBAC for Applications. Not yet confirmed as done. We need the tenant ID, client ID, the secret (by phone) and its expiry date.
+  - No MX or SPF changes made. slsfabrications.com MX is Microsoft (`slsfabrications-com.mail.protection.outlook.com`), SPF is `v=spf1 include:spf.protection.outlook.com ~all`, `MS=ms47689258` verification TXT is present, and so is a `google-site-verification` TXT (left over from Workspace; may be useful for Search Console, do not remove without checking). No DMARC record.
+  - He plans to move the MX to the Trend Micro spam filter later. SPF will then need review BEFORE that change (one SPF record only), and Microsoft must still accept mail from the filter.
+  - Still open: why slsfabrications.co.uk has only the Trend Micro MX and no Microsoft MX.
 - Email stays on Microsoft 365; Google Workspace was dropped.
 - Earlier plan (written before the 2026-10-30 setup; check against what was actually done): add and verify slsfabrications.com in Microsoft (TXT verification record in Cloudflare DNS), CNAME `autodiscover` to `autodiscover.outlook.com` set to DNS only, create `info@slsfabrications.com` as a shared mailbox, test send and receive, enable DKIM. DMARC later.
 - Do not add or change MX or SPF records until they have been reviewed.
