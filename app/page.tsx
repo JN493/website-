@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import HeroCarousel from "@/components/HeroCarousel";
 import { pageMetadata } from "@/lib/pageMetadata";
 
@@ -19,6 +20,20 @@ export default function Home() {
       <div className="container-page pt-4 sm:pt-6">
         <HeroCarousel />
       </div>
+      {/* Copy is the consultant's About copy (subtitle and first paragraph), word for word. */}
+      <section className="container-page py-12 sm:py-16">
+        <div className="max-w-3xl">
+          <h2 className="accent-line text-2xl font-semibold text-ink sm:text-3xl">
+            Experience at Our Core. Innovation in Our Thinking.
+          </h2>
+          <p className="mt-8 text-lg leading-relaxed text-ink">
+            With decades of experience, SLS Fabrications combines technical expertise, skilled workmanship and forward-thinking ideas to deliver precision metal fabrication.
+          </p>
+          <Link href="/about" className="btn btn-secondary mt-8">
+            About Us <span aria-hidden="true">→</span>
+          </Link>
+        </div>
+      </section>
     </main>
   );
 }
