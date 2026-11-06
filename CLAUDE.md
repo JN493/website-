@@ -78,9 +78,12 @@ Open items: see the single list in "Open items" at the end of this file.
 - Versions: Next.js 16.3.8, React 19.2.8, Tailwind 4.3.3.
 - Old iPhone support: `package.json` has a `browserslist` including `safari 15` and `ios_saf 15`. Without it, Next.js 16's own startup code (a class static block) fails on iOS 15 and no JavaScript runs. Tailwind v4 CSS needs Safari 15.4 or newer.
 - Preview address (`workers.dev`) is protected by Cloudflare Access (Zero Trust, free plan): scope "All traffic", policy "Cloudflare account" (only members of the Cloudflare account). Set up 2026-10-07.
-- Netlify is disconnected from the repo and no longer used (it ran out of build credits). The old site at slsfabs.netlify.app still exists.
-- Domain slsfabrications.com: registered and DNS-hosted on Cloudflare (Full setup). Two DNS-only CNAME records (`@` and `www`) still point to `slsfabs.netlify.app`, so the public domain still shows the OLD site. The domain is NOT yet attached to the Worker. When attached, confirm the public domain opens without a login (Access must not cover it).
-- slsfabrications.co.uk is purchased but parked and unconnected.
+- Netlify (changed 2026-11-06, done by the developer in the Cloudflare and Netlify dashboards, checked with `curl.exe` from Windows): the old site at slsfabs.netlify.app has been DELETED. The two Netlify CNAMEs (`@` and `www`) on slsfabrications.com were deleted first, so no record points at Netlify any more (no dangling-CNAME takeover risk). `curl.exe -I https://slsfabrications.com` now fails with "Could not resolve host": the apex has NO DNS record and shows nothing until launch. Email is unaffected (no mail records were touched).
+- Domain slsfabrications.com: registered and DNS-hosted on Cloudflare (Full setup). NOT attached to the Worker (deliberately parked until launch). The preview stays on the Access-protected workers.dev address.
+- Redirects set up 2026-11-06 and tested (all three returned `301` with `location: https://slsfabrications.com/careers` for a `/careers` request, path kept):
+  - slsfabrications.com zone: proxied `A` record `www` to 192.0.2.1, plus a Redirect Rule "www to apex" (hostname equals www.slsfabrications.com; dynamic target `concat("https://slsfabrications.com", http.request.uri.path)`, 301, preserve query string).
+  - slsfabrications.co.uk zone: proxied `A` records `@` and `www` to 192.0.2.1, plus one Redirect Rule "co.uk to com" (hostname is slsfabrications.co.uk or www.slsfabrications.co.uk; same dynamic target, 301, preserve query string). Its mail records (MX Trend Micro, TXT tmes, SPF, Microsoft verification, autodiscover, enterprise enrollment and registration, two DKIM selector CNAMEs) were left alone. That zone showed only the Trend Micro MX and no Microsoft MX on 2026-11-06 (a question for the IT person).
+  - Until launch these redirects send visitors to the apex, which shows nothing.
 
 ## Security headers (added 2026-10-09)
 - `public/_headers` (copied by Next.js into `out/_headers`; Cloudflare Workers static assets applies it to asset responses, it is not served as a file). Format and limits: https://developers.cloudflare.com/workers/static-assets/headers/ (one splat per path, max 100 rules, 2,000 characters per line).
@@ -319,12 +322,13 @@ This replaces the earlier "Open items before launch", "Launch blockers" and "Ope
 - Rachael: proposed an optional "How did you hear about us?" field on the quote form (not yet agreed), plus Google Search Console and Google Business Profile.
 
 ### Launch day
-- Remove the two Netlify CNAMEs (not before), attach the Worker to slsfabrications.com, and make sure no Access login applies to the public domain.
-- www and .co.uk redirects: proxied A records to 192.0.2.1 plus 301 Redirect Rules keeping the path. Redirects for old Netlify addresses if any need keeping.
-- HTTPS check, then HSTS with a short max-age.
-- Live tests: a real quote and CV, then delete them; the CSP on the real domain; the Cookiebot banner and consent log; GA only after Accept.
-- Retire Netlify.
+Already done on 2026-11-06 (see "Hosting and deployment"): the two Netlify CNAMEs removed, the Netlify site deleted, the www and .co.uk redirects created and tested. What is left:
+- Attach slsfabrications.com to the Worker. Do NOT put the route in `wrangler.jsonc` on `main` until launch day: every push to `main` deploys, so a route in the config would attach the domain, and launch the site, on the very next push. On launch day, with the Cloudflare docs open (https://developers.cloudflare.com/workers/configuration/routing/custom-domains/), either add it in the dashboard (Workers & Pages, `website`, Settings, Domains & Routes, Add, Custom Domain, `slsfabrications.com`) or add `"routes": [{ "pattern": "slsfabrications.com", "custom_domain": true }]` to `wrangler.jsonc` and push. Cloudflare creates the DNS record itself; a Custom Domain cannot be created on a hostname that already has a CNAME (there is none now). The docs do not say whether `wrangler deploy` removes a dashboard-added custom domain, so if it is added in the dashboard, also put the route in `wrangler.jsonc` in the same launch session so later deploys cannot detach it. Keep the workers.dev preview enabled.
+- Make sure no Access login applies to the public domain (the Access policy covers only the workers.dev address; check it in Zero Trust, then open the apex in a private window).
+- HTTPS check, then HSTS as a Cloudflare setting with a short max-age (not in `public/_headers`).
+- Live tests: `/robots.txt`, `/sitemap.xml`, a made-up address (404 page), the three redirects again (`/careers`), a real quote and CV, then delete them; the CSP on the real domain; the Cookiebot banner and consent log; GA only after Accept.
 - Search Console domain verification, sitemap submission, Rich Results test.
+- Rollback if something is wrong: delete the Custom Domain in Workers (the apex then has no record again). The Netlify site no longer exists, so the old CNAMEs cannot be restored.
 
 ### After launch
 - Cookiebot rescan and Cookie Policy table update.
