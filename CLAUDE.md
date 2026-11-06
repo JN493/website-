@@ -276,6 +276,7 @@ Five pages: **About, Capabilities, Industries, Projects, Contact** (no "Our" pre
 - The developer pastes between Claude (chat, plans and prompts) and Claude Code (implementation). Claude Code does the code, tests in a real browser, and reports back.
 - Commit with clear messages. Run lint and `npm run build` before reporting. Do not add dependencies without asking.
 - Do not push unless the developer asks (from 2026-10-22; replaces the earlier rule that allowed pushing to `main` without asking before the domain was attached).
+  - Exception (2026-11-06, the developer): small, finished commits that only change docs (such as this file) and do not change the website may be pushed without asking. Anything that changes the site still waits for "push".
 - Keep this file and `sls-content-draft.md` up to date as work happens, but only with changes that are certain (done, tested, or explicitly decided). Do not record guesses or unconfirmed plans as fact.
 - Test on a real phone when possible (an iPhone 7 Plus caught a bug that simulated testing missed).
 - Past issue (resolved): duplicate `app` folders (`src/app/` and root `app/`) broke routing. All pages live in the root `app/`. Shared components are in `src/components/`.
