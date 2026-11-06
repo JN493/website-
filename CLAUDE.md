@@ -1,6 +1,6 @@
 # SLS Fabrications Website: Project Context
 
-Last updated: 2026-11-05. Keep this file current: after any task that changes the site, hosting, content decisions or status, update the relevant section in the same commit.
+Last updated: 2026-11-06. Keep this file current: after any task that changes the site, hosting, content decisions or status, update the relevant section in the same commit.
 
 ## About the business
 SLS Fabrications is a welding and steel fabrication workshop based in Hailsham, East Sussex, UK.
@@ -48,7 +48,9 @@ Done
 - Retention deletion job:
   - Deployed in Supabase, runs daily at 03:30 UTC in DRY-RUN mode, logs in `retention_log`.
   - Real deletion is OFF (`RETENTION_DELETE_ENABLED` not set).
-  - The optional real-deletion test with fake rows was skipped and is still recommended before launch.
+  - Real-project test on 2026-11-05, using fake rows only (`supabase/retention-test-seed.sql`): a dry run reported exactly the expected counts (2 quotes, 2 brochures, 1 application, 2 contacts would be deleted, nothing deleted); one real run (RETENTION_DELETE_ENABLED=true for that single call) then deleted exactly those rows (2, 2, 1, 2) with zero failures and no error, and kept the recent test rows and the old contact still linked to a recent brochure. RETENTION_DELETE_ENABLED was removed straight afterwards (real deletion is OFF again, dry-run mode), the test rows were removed with `supabase/retention-test-remove.sql` and the check returned 0 in all four columns. The log and the function response held counts only, no personal data.
+  - NOT proven: real file removal from storage. The seeded file paths pointed at files that do not exist, so the test proved row deletion only. Before real deletion is enabled for good, repeat it with a real dummy file uploaded to `quote-files` (`retention-test/does-not-exist.pdf`) and `cv-files` (`retention-test/does-not-exist-cv.pdf`), the paths the seed already uses.
+  - To run the job by hand in dry-run mode: in the Supabase SQL Editor run the same `net.http_post` call the schedule uses (url from the Vault secret `project_url` plus `/functions/v1/retention-cleanup`, header `x-retention-secret` from the Vault secret `retention_cleanup_secret`, never selecting the secret), wait a few seconds, then read the reply from `net._http_response` and the new row in `retention_log`. Each call adds its own `retention_log` row (no lock, no once-a-day limit); with real deletion on, a second call would delete the next batch.
   - First real data will not reach 12 months until about October 2027; review the log and enable real deletion before then.
   - The secret lives only in a password manager, Supabase function secrets and Vault, never in the repo.
 - Structured data (LocalBusiness JSON-LD), sitemap and robots.
@@ -272,7 +274,7 @@ Five pages: **About, Capabilities, Industries, Projects, Contact** (no "Our" pre
 This replaces the earlier "Open items before launch", "Launch blockers" and "Open items" lists. Keep it as one list with no duplicates.
 
 ### Before launch (code and config)
-- Retention job: real-deletion test with fake rows older than 12 months (`supabase/retention-test-seed.sql`, then `supabase/retention-test-remove.sql`), then back to dry-run. Later, before about October 2027 and after reviewing `retention_log`, set `RETENTION_DELETE_ENABLED=true` only when the dry-run counts look right.
+- Retention job: the end-to-end test with fake rows passed on 2026-11-05 (dry run, one real deletion, clean-up; see "Retention clean-up"). Still open: prove real file removal from storage with a real dummy file, and, before about October 2027 and after reviewing `retention_log`, set `RETENTION_DELETE_ENABLED=true` for good only when the dry-run counts look right. Real deletion stays OFF until then.
 - Lock-down SQL: not recorded as done; confirm before acting. Run `supabase/save-current-policies.sql` (keep the result), `supabase/lock-down-direct-inserts.sql` and `supabase/lock-down-checks.sql` (all queries return no rows, the contacts check returns relrowsecurity = true), then one real test per form.
 - Launch-readiness audit of the repo: sitemap, robots.txt, titles and descriptions, canonical and social tags, 404 page, favicon, leftover preview addresses.
 - Projects title and description: on hold. They still say "Our Work & Case Studies" and "Browse real fabrication projects", but the page has no case studies yet.
