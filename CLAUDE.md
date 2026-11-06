@@ -33,7 +33,7 @@ Done
 - Cookiebot (Domain Group ID fbd2a6ae-76e6-4170-bb8d-46ced9c918cf) loaded directly from `app/layout.tsx` after the Consent Mode defaults and Tag Manager.
   - The paid (Premium) plan has been paid for (2026-10-30).
   - slsfabrications.com is added as a live domain in the domain group. The preview address is an alias: aliases show a TEST banner and do not log consent.
-  - Whether www.slsfabrications.com is also listed is NOT confirmed.
+  - www.slsfabrications.com does not need to be listed (2026-11-06): the Cloudflare Redirect Rule sends it to the apex before any page is served, so no banner is ever shown on www. If it is ever listed, add it as a normal domain, NOT as an alias (aliases show the TEST banner and do not log consent).
   - After launch: trigger a new scan, check consent appears in the Cookiebot log, and update the Cookie Policy table.
 - Alert emails for quotes and job applications: built and deployed in production, switched off (details under "Alert emails").
 - Tag Manager container GTM-M995FM9J is published:
