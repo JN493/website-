@@ -8,7 +8,7 @@
   /* Height of the sticky header, so anchors and focused elements are never hidden under it. */
   --header-h: 4.5rem;
   /* Page width and side gutters, used by .container-page and the Capabilities pop-up so their edges line up. */
-  --page-max: 72rem;
+  --page-max: 90rem;
   --page-gutter: 1rem;
 }
 @media (width >= 40rem) {

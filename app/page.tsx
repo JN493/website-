@@ -14,10 +14,9 @@ export const metadata: Metadata = pageMetadata({
 export default function Home() {
   return (
     <main id="main">
-      <section className="container-page pb-8 pt-10 sm:pb-10 sm:pt-16">
-        <h1 className="text-4xl font-bold tracking-tight text-brand sm:text-5xl">SLS Fabrications</h1>
-      </section>
-      <div className="container-page">
+      {/* The page's h1 for search engines and screen readers; the logo in the header carries the name visually. */}
+      <h1 className="sr-only">SLS Fabrications</h1>
+      <div className="container-page pt-4 sm:pt-6">
         <HeroCarousel />
       </div>
     </main>

@@ -83,7 +83,9 @@ export default function HeroCarousel() {
       role="group"
       aria-roledescription="carousel"
       aria-label="Photos"
-      className="relative aspect-[4/3] overflow-hidden rounded-lg bg-steel sm:aspect-[16/9]"
+      // Taller on phones (4:5), 16:9 from 640px, but never taller than the screen (the header, the gap above it and a
+      // little space below are taken off) and never shorter than 20rem, so the text and button always fit.
+      className="relative aspect-[4/5] w-full max-h-[calc(100svh-9rem)] min-h-[20rem] overflow-hidden rounded-lg bg-steel sm:aspect-[16/9]"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onFocus={() => setFocusInside(true)}
@@ -110,9 +112,9 @@ export default function HeroCarousel() {
               <img
                 src={`/images/hero/${slide.name}-${slide.widths.at(-1)}.webp`}
                 srcSet={slide.widths.map((w) => `/images/hero/${slide.name}-${w}.webp ${w}w`).join(", ")}
-                // The displayed width: the page column (--page-max 72rem) less its gutters (1rem, 1.5rem from 40rem,
-                // 2rem from 64rem), so the browser picks the smallest file that covers it.
-                sizes="(min-width: 72rem) 1088px, (min-width: 64rem) calc(100vw - 4rem), (min-width: 40rem) calc(100vw - 3rem), calc(100vw - 2rem)"
+                // The displayed width: the page column (--page-max 90rem) less its gutters (1rem, 1.5rem from 40rem,
+                // 2rem from 64rem), so the browser picks the smallest file that covers it: 90rem - 4rem = 1376px.
+                sizes="(min-width: 90rem) 1376px, (min-width: 64rem) calc(100vw - 4rem), (min-width: 40rem) calc(100vw - 3rem), calc(100vw - 2rem)"
                 width={slide.width}
                 height={slide.height}
                 alt={slide.alt}
