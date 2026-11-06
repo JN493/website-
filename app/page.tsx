@@ -21,7 +21,7 @@ export default function Home() {
         <HeroCarousel />
       </div>
       {/* Copy is the consultant's About copy (subtitle and first paragraph), word for word. */}
-      <section className="container-page py-12 sm:py-16">
+      <section className="container-page pt-12 sm:pt-16">
         <div className="max-w-3xl">
           <h2 className="accent-line text-2xl font-semibold text-ink sm:text-3xl">
             Experience at Our Core. Innovation in Our Thinking.
